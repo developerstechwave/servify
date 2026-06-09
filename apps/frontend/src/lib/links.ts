@@ -1,6 +1,7 @@
 export const LINKS = {
   // Auth
-  LOGIN:          '/auth/login',
+  LOGIN:           '/auth/login',
+  REGISTER:        '/auth/register',
   FORGOT_PASSWORD: '/auth/forgot-password',
   RESET_PASSWORD:  '/auth/reset-password',
   JOIN_ORG:        '/auth/join',
@@ -11,21 +12,21 @@ export const LINKS = {
   SUPER_ADMIN_INVITES:       '/super-admin/invites',
 
   // Admin
-  ADMIN_DASHBOARD:           '/admin',
-  ADMIN_CUSTOMERS:           '/admin/customers',
-  ADMIN_EMPLOYEES:           '/admin/employees',
-  ADMIN_PRODUCTS:            '/admin/products',
-  ADMIN_ROLES:               '/admin/roles',
-  ADMIN_CRM:                 '/admin/crm',
-  ADMIN_ISSUES:              '/admin/issues',
+  ADMIN_DASHBOARD:  '/admin',
+  ADMIN_CUSTOMERS:  '/admin/customers',
+  ADMIN_EMPLOYEES:  '/admin/employees',
+  ADMIN_PRODUCTS:   '/admin/products',
+  ADMIN_ROLES:      '/admin/roles',
+  ADMIN_CRM:        '/admin/crm',
+  ADMIN_ISSUES:     '/admin/issues',
 
   // Employee
-  EMPLOYEE_CRM:              '/employee/crm',
-  EMPLOYEE_NOTIFICATIONS:    '/employee/notifications',
+  EMPLOYEE_CRM:           '/employee/crm',
+  EMPLOYEE_NOTIFICATIONS: '/employee/notifications',
 
   // Customer
-  CUSTOMER_DASHBOARD:        '/customer',
-  CUSTOMER_SUBSCRIPTIONS:    '/customer/subscriptions',
-  CUSTOMER_ISSUES:           '/customer/issues',
-  CUSTOMER_FAQS:             '/customer/faqs',
+  CUSTOMER_DASHBOARD:     '/customer',
+  CUSTOMER_SUBSCRIPTIONS: '/customer/subscriptions',
+  CUSTOMER_ISSUES:        '/customer/issues',
+  CUSTOMER_FAQS:          '/customer/faqs',
 } as const;
