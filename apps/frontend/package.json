@@ -1,0 +1,16 @@
+{
+  "name": "@org/frontend",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@ant-design/icons": "^6.2.5",
+    "antd": "^6.4.3",
+    "axios": "^1.17.0",
+    "react-router-dom": "^7.17.0",
+    "zustand": "^5.0.14"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.0",
+    "tailwindcss": "^4.3.0"
+  }
+}
