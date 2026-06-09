@@ -1,27 +1,57 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Response, Request } from 'express';
+import { User, UserRole } from './entities/user.entity';
+import { Invitation, InvitationStatus } from './entities/invitation.entity';
 import { LoginDto } from './dto/login.dto';
-import { User } from './entities/user.entity';
+import { RegisterDto } from './dto/register.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
     private userRepo: Repository<User>,
+    @InjectRepository(Invitation)
+    private invitationRepo: Repository<Invitation>,
     private jwtService: JwtService,
   ) {}
 
   private buildPayload(user: User) {
     return {
-      sub: user.id,
+      sub:   user.id,
       email: user.email,
-      role: user.role,
+      role:  user.role,
       orgId: user.organisationId,
     };
+  }
+
+  private setRefreshCookie(res: Response, token: string) {
+    res.cookie('refresh_token', token, {
+      httpOnly: true,
+      secure:   process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge:   7 * 24 * 60 * 60 * 1000,
+    });
+  }
+
+  private signTokens(payload: object) {
+    const accessToken = this.jwtService.sign(payload, {
+      secret:    process.env.JWT_ACCESS_SECRET,
+      expiresIn: 900,
+    });
+    const refreshToken = this.jwtService.sign(payload, {
+      secret:    process.env.JWT_REFRESH_SECRET,
+      expiresIn: 604800,
+    });
+    return { accessToken, refreshToken };
   }
 
   async login(dto: LoginDto, res: Response) {
@@ -40,34 +70,104 @@ export class AuthService {
     await this.userRepo.save(user);
 
     const payload = this.buildPayload(user);
-
-    const accessToken = this.jwtService.sign(payload, {
-      secret: process.env.JWT_ACCESS_SECRET,
-      expiresIn: 900, // 15 minutes
-    });
-
-    const refreshToken = this.jwtService.sign(payload, {
-      secret: process.env.JWT_REFRESH_SECRET,
-      expiresIn: 604800, // 7 days
-    });
-
-    res.cookie('refresh_token', refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    const { accessToken, refreshToken } = this.signTokens(payload);
+    this.setRefreshCookie(res, refreshToken);
 
     return {
       accessToken,
       user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role,
+        id:             user.id,
+        email:          user.email,
+        firstName:      user.firstName,
+        lastName:       user.lastName,
+        role:           user.role,
         organisationId: user.organisationId,
       },
+    };
+  }
+
+  async register(dto: RegisterDto, res: Response) {
+    const invitation = await this.invitationRepo.findOne({
+      where: { token: dto.token },
+    });
+
+    if (!invitation) {
+      throw new BadRequestException('Invalid registration token');
+    }
+    if (invitation.status !== InvitationStatus.PENDING) {
+      throw new BadRequestException('This invitation has already been used');
+    }
+    if (new Date() > invitation.expiresAt) {
+      invitation.status = InvitationStatus.EXPIRED;
+      await this.invitationRepo.save(invitation);
+      throw new BadRequestException('This invitation has expired');
+    }
+
+    const existing = await this.userRepo.findOne({ where: { email: dto.email } });
+    if (existing) {
+      throw new BadRequestException('An account with this email already exists');
+    }
+
+    const role = dto.token.toUpperCase().startsWith('ADM')
+      ? UserRole.ADMIN
+      : UserRole.CUSTOMER;
+
+    const nameParts  = dto.fullName.trim().split(' ');
+    const firstName  = nameParts[0];
+    const lastName   = nameParts.slice(1).join(' ') || '-';
+
+    const user = this.userRepo.create({
+      email:          dto.email,
+      password:       await bcrypt.hash(dto.password, 12),
+      firstName,
+      lastName,
+      role,
+      organisationId: invitation.organisationId || null,
+      isActive:       true,
+    });
+
+    await this.userRepo.save(user);
+
+    invitation.status = InvitationStatus.ACCEPTED;
+    await this.invitationRepo.save(invitation);
+
+    const payload = this.buildPayload(user);
+    const { accessToken, refreshToken } = this.signTokens(payload);
+    this.setRefreshCookie(res, refreshToken);
+
+    return {
+      accessToken,
+      user: {
+        id:             user.id,
+        email:          user.email,
+        firstName:      user.firstName,
+        lastName:       user.lastName,
+        role:           user.role,
+        organisationId: user.organisationId,
+      },
+    };
+  }
+
+  async validateInvitationToken(token: string) {
+    const invitation = await this.invitationRepo.findOne({
+      where: { token },
+    });
+
+    if (!invitation) {
+      throw new NotFoundException('Invalid token');
+    }
+    if (invitation.status !== InvitationStatus.PENDING) {
+      throw new BadRequestException('Token already used');
+    }
+    if (new Date() > invitation.expiresAt) {
+      throw new BadRequestException('Token expired');
+    }
+
+    return {
+      valid:          true,
+      email:          invitation.email,
+      type:           invitation.type,
+      organisationId: invitation.organisationId,
     };
   }
 
@@ -85,7 +185,7 @@ export class AuthService {
       if (!user || !user.isActive) throw new UnauthorizedException();
 
       const accessToken = this.jwtService.sign(this.buildPayload(user), {
-        secret: process.env.JWT_ACCESS_SECRET,
+        secret:    process.env.JWT_ACCESS_SECRET,
         expiresIn: 900,
       });
 
@@ -104,11 +204,11 @@ export class AuthService {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new UnauthorizedException();
     return {
-      id: user.id,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      role: user.role,
+      id:             user.id,
+      email:          user.email,
+      firstName:      user.firstName,
+      lastName:       user.lastName,
+      role:           user.role,
       organisationId: user.organisationId,
     };
   }
