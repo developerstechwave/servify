@@ -1,32 +1,32 @@
 export const LINKS = {
-  // Auth
   LOGIN:           '/auth/login',
   REGISTER:        '/auth/register',
   FORGOT_PASSWORD: '/auth/forgot-password',
   RESET_PASSWORD:  '/auth/reset-password',
   JOIN_ORG:        '/auth/join',
 
-  // Super Admin
   SUPER_ADMIN_DASHBOARD:     '/super-admin',
   SUPER_ADMIN_ORGANISATIONS: '/super-admin/organisations',
   SUPER_ADMIN_INVITES:       '/super-admin/invites',
 
-  // Admin
-  ADMIN_DASHBOARD:  '/admin',
-  ADMIN_CUSTOMERS:  '/admin/customers',
-  ADMIN_EMPLOYEES:  '/admin/employees',
-  ADMIN_PRODUCTS:   '/admin/products',
-  ADMIN_ROLES:      '/admin/roles',
-  ADMIN_CRM:        '/admin/crm',
-  ADMIN_ISSUES:     '/admin/issues',
+  ADMIN_DASHBOARD:     '/admin',
+  ADMIN_SUBSCRIPTIONS: '/admin/subscriptions',
+  ADMIN_CUSTOMERS:     '/admin/users/customers',
+  ADMIN_EMPLOYEES:     '/admin/users/employees',
+  ADMIN_ROLES:         '/admin/users/roles',
+  ADMIN_CRM:           '/admin/crm',
+  ADMIN_ISSUES:        '/admin/issues',
+  ADMIN_PAYMENTS:      '/admin/payments',
 
-  // Employee
+  EMPLOYEE_DASHBOARD:     '/employee',
+  EMPLOYEE_MY_TICKETS:    '/employee/tickets',
   EMPLOYEE_CRM:           '/employee/crm',
+  EMPLOYEE_CUSTOMERS:     '/employee/customers',
   EMPLOYEE_NOTIFICATIONS: '/employee/notifications',
 
-  // Customer
   CUSTOMER_DASHBOARD:     '/customer',
   CUSTOMER_SUBSCRIPTIONS: '/customer/subscriptions',
   CUSTOMER_ISSUES:        '/customer/issues',
+  CUSTOMER_PAYMENTS:      '/customer/payments',
   CUSTOMER_FAQS:          '/customer/faqs',
 } as const;

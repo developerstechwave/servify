@@ -8,6 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { v4 as uuidv4 } from 'uuid';
 import { Response, Request } from 'express';
 import { User, UserRole } from './entities/user.entity';
 import { Invitation, InvitationStatus } from './entities/invitation.entity';
@@ -87,50 +88,57 @@ export class AuthService {
   }
 
   async register(dto: RegisterDto, res: Response) {
+    // 1. Validate invitation token
     const invitation = await this.invitationRepo.findOne({
       where: { token: dto.token },
     });
 
-    if (!invitation) {
-      throw new BadRequestException('Invalid registration token');
-    }
-    if (invitation.status !== InvitationStatus.PENDING) {
-      throw new BadRequestException('This invitation has already been used');
-    }
+    if (!invitation) throw new BadRequestException('Invalid registration token');
+    if (invitation.status !== InvitationStatus.PENDING) throw new BadRequestException('This invitation has already been used');
     if (new Date() > invitation.expiresAt) {
       invitation.status = InvitationStatus.EXPIRED;
       await this.invitationRepo.save(invitation);
       throw new BadRequestException('This invitation has expired');
     }
 
+    // 2. Check email not already registered
     const existing = await this.userRepo.findOne({ where: { email: dto.email } });
-    if (existing) {
-      throw new BadRequestException('An account with this email already exists');
-    }
+    if (existing) throw new BadRequestException('An account with this email already exists');
 
-    const role = dto.token.toUpperCase().startsWith('ADM')
-      ? UserRole.ADMIN
-      : UserRole.CUSTOMER;
+    // 3. Determine role from token prefix
+    const isAdmin = dto.token.toUpperCase().startsWith('ADM');
+    const role    = isAdmin ? UserRole.ADMIN : UserRole.CUSTOMER;
 
-    const nameParts  = dto.fullName.trim().split(' ');
-    const firstName  = nameParts[0];
-    const lastName   = nameParts.slice(1).join(' ') || '-';
+    // 4. Determine organisationId
+    // - Admin: generate a new organisation UUID
+    // - Customer: use the one from the invitation
+    const organisationId = isAdmin
+      ? uuidv4()
+      : invitation.organisationId;
 
+    // 5. Split fullName into firstName + lastName
+    const nameParts = dto.fullName.trim().split(' ');
+    const firstName = nameParts[0];
+    const lastName  = nameParts.slice(1).join(' ') || '-';
+
+    // 6. Create user
     const user = this.userRepo.create({
       email:          dto.email,
       password:       await bcrypt.hash(dto.password, 12),
       firstName,
       lastName,
       role,
-      organisationId: invitation.organisationId || null,
+      organisationId,
       isActive:       true,
     });
 
     await this.userRepo.save(user);
 
+    // 7. Mark invitation as accepted
     invitation.status = InvitationStatus.ACCEPTED;
     await this.invitationRepo.save(invitation);
 
+    // 8. Sign tokens and set cookie
     const payload = this.buildPayload(user);
     const { accessToken, refreshToken } = this.signTokens(payload);
     this.setRefreshCookie(res, refreshToken);
@@ -149,19 +157,11 @@ export class AuthService {
   }
 
   async validateInvitationToken(token: string) {
-    const invitation = await this.invitationRepo.findOne({
-      where: { token },
-    });
+    const invitation = await this.invitationRepo.findOne({ where: { token } });
 
-    if (!invitation) {
-      throw new NotFoundException('Invalid token');
-    }
-    if (invitation.status !== InvitationStatus.PENDING) {
-      throw new BadRequestException('Token already used');
-    }
-    if (new Date() > invitation.expiresAt) {
-      throw new BadRequestException('Token expired');
-    }
+    if (!invitation)                                    throw new NotFoundException('Invalid token');
+    if (invitation.status !== InvitationStatus.PENDING) throw new BadRequestException('Token already used');
+    if (new Date() > invitation.expiresAt)              throw new BadRequestException('Token expired');
 
     return {
       valid:          true,
@@ -173,7 +173,7 @@ export class AuthService {
 
   async refresh(req: Request, res: Response) {
     const cookies = req.cookies as Record<string, string>;
-    const token = cookies?.refresh_token;
+    const token   = cookies?.refresh_token;
     if (!token) throw new UnauthorizedException('No refresh token');
 
     try {

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    body { font-family: Arial, sans-serif; background: #f9f9f9; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 40px auto; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+    .header { background: rgba(101,16,127,1); padding: 32px; text-align: center; }
+    .header h1 { color: #fff; margin: 0; font-size: 24px; }
+    .body { padding: 40px 32px; }
+    .body p { color: #444; font-size: 15px; line-height: 1.6; }
+    .status-box { background: #f5edf9; border-radius: 8px; padding: 16px 20px; margin: 20px 0; }
+    .footer { background: #f9f9f9; padding: 20px 32px; text-align: center; }
+    .footer p { color: #aaa; font-size: 12px; margin: 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Servify</h1>
+    </div>
+    <div class="body">
+      <p>Hello {{name}},</p>
+      <p>We have received your request to join Servify. Our team will review your application and get back to you shortly.</p>
+      <div class="status-box">
+        <p style="margin:0;color:rgba(101,16,127,1);font-weight:bold;">Status: Pending Review</p>
+      </div>
+      <p>You will receive an email with your registration link once your request has been approved.</p>
+      <p>Thank you for your interest in Servify!</p>
+    </div>
+    <div class="footer">
+      <p>© 2026 Servify. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>
