@@ -14,15 +14,14 @@ const PROGRESS = [30, 60, 100];
 
 export default function RegisterPage() {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const [step, setStep] = useState(0);
+  const navigate       = useNavigate();
+  const [step, setStep]       = useState(0);
   const [loading, setLoading] = useState(false);
   const [step1Data, setStep1Data] = useState<any>(null);
 
-  const token = searchParams.get('token') || '';
+  const token   = searchParams.get('token') || '';
   const isAdmin = token.toUpperCase().startsWith('ADM');
 
-  // Redirect if no token
   useEffect(() => {
     if (!token) navigate(LINKS.LOGIN);
   }, [token, navigate]);
@@ -40,8 +39,11 @@ export default function RegisterPage() {
         fullName: step1Data.fullName,
         email:    step1Data.email,
         password: step1Data.password,
-        ...values,
-        role: isAdmin ? 'admin' : 'customer',
+        address1: values.address1,
+        address2: values.address2,
+        region:   values.region,
+        country:  values.country,
+        phone:    values.phone,
       });
       setStep(2);
     } catch (err: any) {
@@ -72,8 +74,6 @@ export default function RegisterPage() {
       {/* Right Panel */}
       <div className="flex items-center justify-center bg-form-bg px-6 py-12 min-h-screen">
         <div className="w-full max-w-md">
-
-          {/* Header */}
           <div className="flex items-center mb-2">
             {!isSuccess && (
               <button
@@ -89,20 +89,17 @@ export default function RegisterPage() {
               </h1>
               <p className="text-text-muted text-sm mt-1">
                 {isSuccess
-                  ? 'Congratulation! Your account has been successfully created'
+                  ? 'Congratulations! Your account has been successfully created'
                   : 'Please provide your details to get started'}
               </p>
             </div>
-            {/* spacer to center title */}
             {!isSuccess && <div className="w-8" />}
           </div>
 
-          {/* Progress */}
           <div className="mt-6">
             <RegisterProgress percent={PROGRESS[step]} />
           </div>
 
-          {/* Steps */}
           {step === 0 && (
             <RegisterStep1
               isAdmin={isAdmin}
@@ -119,7 +116,6 @@ export default function RegisterPage() {
             />
           )}
           {step === 2 && <RegisterSuccess />}
-
         </div>
       </div>
     </div>

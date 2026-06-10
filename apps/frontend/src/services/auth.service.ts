@@ -16,7 +16,6 @@ export const authService = {
     region:    string;
     country:   string;
     phone:     string;
-    role:      string;
   }) {
     const { data } = await api.post('/auth/register', payload);
     return data;
