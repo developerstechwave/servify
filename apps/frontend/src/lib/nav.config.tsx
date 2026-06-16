@@ -16,7 +16,6 @@ const icon = (d: string) => (
   </svg>
 );
 
-// ── SUPER ADMIN ──────────────────────────────────────────────────
 export const SUPER_ADMIN_NAV: NavItem[] = [
   {
     key:   'dashboard',
@@ -27,7 +26,7 @@ export const SUPER_ADMIN_NAV: NavItem[] = [
   {
     key:   'organisations',
     label: 'Organizations',
-    icon:  icon('M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2zM9 22V12h6v10M12 3v18'),
+    icon:  icon('M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'),
     path:  LINKS.SUPER_ADMIN_ORGANISATIONS,
   },
   {
@@ -38,13 +37,18 @@ export const SUPER_ADMIN_NAV: NavItem[] = [
   },
 ];
 
-// ── ADMIN ────────────────────────────────────────────────────────
 export const ADMIN_NAV: NavItem[] = [
   {
     key:   'dashboard',
     label: 'Dashboard',
     icon:  icon('M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z M9 22V12h6v10'),
     path:  LINKS.ADMIN_DASHBOARD,
+  },
+  {
+    key:   'invites',
+    label: 'Invites',
+    icon:  icon('M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z'),
+    path:  LINKS.ADMIN_INVITES,
   },
   {
     key:   'subscriptions',
@@ -97,7 +101,6 @@ export const ADMIN_NAV: NavItem[] = [
   },
 ];
 
-// ── EMPLOYEE ─────────────────────────────────────────────────────
 export const EMPLOYEE_NAV: NavItem[] = [
   {
     key:   'dashboard',
@@ -131,7 +134,6 @@ export const EMPLOYEE_NAV: NavItem[] = [
   },
 ];
 
-// ── CUSTOMER ─────────────────────────────────────────────────────
 export const CUSTOMER_NAV: NavItem[] = [
   {
     key:   'dashboard',

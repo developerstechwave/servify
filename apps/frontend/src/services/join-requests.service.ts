@@ -1,9 +1,13 @@
 import api from './api';
 
 export const joinRequestsService = {
-  async getPending(type?: string) {
-    const params = type ? `?type=${type}` : '';
-    const { data } = await api.get(`/join-requests${params}`);
+  async getPendingOrganisations() {
+    const { data } = await api.get('/join-requests/pending/organisations');
+    return data;
+  },
+
+  async getPendingCustomers() {
+    const { data } = await api.get('/join-requests/pending/customers');
     return data;
   },
 
@@ -14,6 +18,11 @@ export const joinRequestsService = {
 
   async approveOrganisation(id: string) {
     const { data } = await api.patch(`/join-requests/${id}/approve-organisation`);
+    return data;
+  },
+
+  async approveCustomer(id: string) {
+    const { data } = await api.patch(`/join-requests/${id}/approve-customer`);
     return data;
   },
 

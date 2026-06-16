@@ -33,8 +33,6 @@ export class JoinRequestsService {
     const admins = await this.userRepo.find({
       where: { role: UserRole.ADMIN, isActive: true },
     });
-
-    // Only return orgs that have a valid organisationId
     return admins
       .filter((a) => !!a.organisationId)
       .map((a) => ({
@@ -94,6 +92,18 @@ export class JoinRequestsService {
     const where: any = { status: JoinRequestStatus.PENDING };
     if (type) where.type = type;
     return this.joinRequestRepo.find({ where, order: { createdAt: 'DESC' } });
+  }
+
+  // Admin-specific: only their org's customer requests
+  async getPendingCustomerRequests(organisationId: string) {
+    return this.joinRequestRepo.find({
+      where: {
+        status:         JoinRequestStatus.PENDING,
+        type:           JoinRequestType.CUSTOMER,
+        organisationId,
+      },
+      order: { createdAt: 'DESC' },
+    });
   }
 
   async getById(id: string) {
