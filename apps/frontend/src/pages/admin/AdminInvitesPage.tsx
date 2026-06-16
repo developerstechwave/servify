@@ -2,24 +2,25 @@ import { useEffect, useState } from 'react';
 import { Table, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { joinRequestsService } from '../../services/join-requests.service';
+import { useAuthStore } from '../../store/auth.store';
 import { LINKS } from '../../lib/links';
 
 interface JoinRequest {
-  id:          string;
-  name:        string;
-  email:       string;
-  description: string;
-  createdAt:   string;
-  status:      string;
+  id:        string;
+  name:      string;
+  email:     string;
+  phone:     string;
+  createdAt: string;
 }
 
-export default function InvitesPage() {
+export default function AdminInvitesPage() {
   const navigate  = useNavigate();
+  const { user }  = useAuthStore();
   const [data, setData]       = useState<JoinRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    joinRequestsService.getPendingOrganisations()
+    joinRequestsService.getPendingCustomers()
       .then(setData)
       .catch(() => message.error('Failed to load requests'))
       .finally(() => setLoading(false));
@@ -27,7 +28,7 @@ export default function InvitesPage() {
 
   const columns = [
     {
-      title:     'Company Name',
+      title:     'Customer Name',
       dataIndex: 'name',
       key:       'name',
       sorter:    (a: JoinRequest, b: JoinRequest) => a.name.localeCompare(b.name),
@@ -39,19 +40,24 @@ export default function InvitesPage() {
       key:       'email',
       render:    (text: string) => (
         <span className="text-text-muted">
-          {text.length > 18 ? text.slice(0, 18) + '...' : text}
+          {text.length > 20 ? text.slice(0, 20) + '...' : text}
         </span>
       ),
     },
     {
-      title:     'Description',
-      dataIndex: 'description',
-      key:       'description',
-      render:    (text: string) => (
+      title:  'Company Name',
+      key:    'company',
+      render: () => (
         <span className="text-text-muted">
-          {text ? (text.length > 20 ? text.slice(0, 20) + '...' : text) : '—'}
+          {`${user?.firstName} ${user?.lastName}`}
         </span>
       ),
+    },
+    {
+      title:     'Phone',
+      dataIndex: 'phone',
+      key:       'phone',
+      render:    (text: string) => <span className="text-text-muted">{text || '—'}</span>,
     },
     {
       title:     'Date Submitted',
@@ -69,7 +75,7 @@ export default function InvitesPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold text-text-main">Requests</h1>
+      <h1 className="text-2xl font-bold text-text-main">Customer Requests</h1>
       <div className="bg-white rounded-2xl border border-border overflow-hidden">
         <Table
           columns={columns}
@@ -78,7 +84,7 @@ export default function InvitesPage() {
           loading={loading}
           pagination={{ pageSize: 9, showSizeChanger: false, style: { padding: '16px 24px' } }}
           onRow={(record) => ({
-            onClick:   () => navigate(`${LINKS.SUPER_ADMIN_INVITES}/${record.id}`),
+            onClick:   () => navigate(`${LINKS.ADMIN_INVITES}/${record.id}`),
             className: 'cursor-pointer hover:bg-gray-50 transition-colors',
           })}
           style={{ border: 'none' }}

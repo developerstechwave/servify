@@ -10,6 +10,7 @@ export const LINKS = {
   SUPER_ADMIN_INVITES:       '/super-admin/invites',
 
   ADMIN_DASHBOARD:     '/admin',
+  ADMIN_INVITES:       '/admin/invites',
   ADMIN_SUBSCRIPTIONS: '/admin/subscriptions',
   ADMIN_CUSTOMERS:     '/admin/users/customers',
   ADMIN_EMPLOYEES:     '/admin/users/employees',

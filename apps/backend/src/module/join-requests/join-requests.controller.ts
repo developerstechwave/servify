@@ -5,7 +5,6 @@ import {
   Patch,
   Body,
   Param,
-  Query,
   UseGuards,
   Req,
 } from '@nestjs/common';
@@ -37,11 +36,18 @@ export class JoinRequestsController {
     return this.service.organisationJoinRequest(dto);
   }
 
-  @Get()
+  @Get('pending/organisations')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
-  getPending(@Query('type') type?: JoinRequestType) {
-    return this.service.getPendingRequests(type);
+  @Roles(UserRole.SUPER_ADMIN)
+  getPendingOrganisations() {
+    return this.service.getPendingRequests(JoinRequestType.ORGANISATION);
+  }
+
+  @Get('pending/customers')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN)
+  getPendingCustomers(@Req() req: any) {
+    return this.service.getPendingCustomerRequests(req.user.organisationId);
   }
 
   @Get(':id')
