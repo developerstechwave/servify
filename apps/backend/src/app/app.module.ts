@@ -1,14 +1,17 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AuthModule }          from '../module/auth/auth.module';
-import { DashboardModule }     from '../module/dashboard/dashboard.module';
-import { JoinRequestsModule }  from '../module/join-requests/join-requests.module';
-import { OrganisationsModule } from '../module/organisations/organisations.module';
-import { ProfileModule }       from '../module/profile/profile.module';
+import { AuthModule }           from '../module/auth/auth.module';
+import { DashboardModule }      from '../module/dashboard/dashboard.module';
+import { JoinRequestsModule }   from '../module/join-requests/join-requests.module';
+import { OrganisationsModule }  from '../module/organisations/organisations.module';
+import { ProfileModule }        from '../module/profile/profile.module';
+import { SubscriptionsModule }  from '../module/subscriptions/subscriptions.module';
 import { User }        from '../module/auth/entities/user.entity';
 import { Invitation }  from '../module/auth/entities/invitation.entity';
 import { JoinRequest } from '../module/join-requests/entities/join-request.entity';
+import { Product }     from '../module/subscriptions/entities/product.entity';
+import { Service }     from '../module/subscriptions/entities/service.entity';
 
 @Module({
   imports: [
@@ -20,7 +23,7 @@ import { JoinRequest } from '../module/join-requests/entities/join-request.entit
       username:    process.env.DB_USER     || 'postgres',
       password:    process.env.DB_PASSWORD || '',
       database:    process.env.DB_NAME     || 'servify',
-      entities:    [User, Invitation, JoinRequest],
+      entities:    [User, Invitation, JoinRequest, Product, Service],
       synchronize: true,
       logging:     false,
     }),
@@ -29,6 +32,7 @@ import { JoinRequest } from '../module/join-requests/entities/join-request.entit
     JoinRequestsModule,
     OrganisationsModule,
     ProfileModule,
+    SubscriptionsModule,
   ],
 })
 export class AppModule {}
