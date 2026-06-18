@@ -37,16 +37,31 @@ export class User {
   role: UserRole;
 
   @Column({ nullable: true })
-  organisationId: string | null;
+  organisationId: string;
 
   @Column({ nullable: true })
-  avatar: string | null;
+  avatar: string;
+
+  @Column({ nullable: true })
+  phone: string;
+
+  @Column({ nullable: true })
+  country: string;
+
+  @Column({ nullable: true })
+  region: string;
+
+  @Column({ nullable: true })
+  address: string;
+
+  @Column({ nullable: true, type: 'text' })
+  description: string;
 
   @Column({ default: true })
   isActive: boolean;
 
   @Column({ nullable: true })
-  lastLoginAt: Date | null;
+  lastLoginAt: Date;
 
   @CreateDateColumn()
   createdAt: Date;

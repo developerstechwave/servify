@@ -5,6 +5,7 @@ import { AuthModule }          from '../module/auth/auth.module';
 import { DashboardModule }     from '../module/dashboard/dashboard.module';
 import { JoinRequestsModule }  from '../module/join-requests/join-requests.module';
 import { OrganisationsModule } from '../module/organisations/organisations.module';
+import { ProfileModule }       from '../module/profile/profile.module';
 import { User }        from '../module/auth/entities/user.entity';
 import { Invitation }  from '../module/auth/entities/invitation.entity';
 import { JoinRequest } from '../module/join-requests/entities/join-request.entity';
@@ -27,6 +28,7 @@ import { JoinRequest } from '../module/join-requests/entities/join-request.entit
     DashboardModule,
     JoinRequestsModule,
     OrganisationsModule,
+    ProfileModule,
   ],
 })
 export class AppModule {}
