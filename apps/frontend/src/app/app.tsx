@@ -11,6 +11,7 @@ import OrganisationsPage     from '../pages/super-admin/OrganisationsPage';
 import AdminDashboard        from '../pages/admin/AdminDashboard';
 import AdminInvitesPage      from '../pages/admin/AdminInvitesPage';
 import AdminInviteDetailPage from '../pages/admin/AdminInviteDetailPage';
+import SubscriptionsPage     from '../pages/admin/SubscriptionsPage';
 import ProfilePage           from '../pages/profile/ProfilePage';
 import { LINKS } from '../lib/links';
 
@@ -32,7 +33,6 @@ export default function App() {
         <Route path={LINKS.REGISTER} element={<RegisterPage />} />
         <Route path={LINKS.JOIN_ORG} element={<JoinPage />} />
 
-        {/* Super Admin */}
         <Route path="/super-admin/*" element={
           <ProtectedRoute allowedRoles={['super_admin']}>
             <DashboardLayout>
@@ -46,7 +46,6 @@ export default function App() {
           </ProtectedRoute>
         } />
 
-        {/* Admin */}
         <Route path="/admin/*" element={
           <ProtectedRoute allowedRoles={['admin']}>
             <DashboardLayout>
@@ -55,7 +54,7 @@ export default function App() {
                 <Route path="profile"         element={<ProfilePage />} />
                 <Route path="invites"         element={<AdminInvitesPage />} />
                 <Route path="invites/:id"     element={<AdminInviteDetailPage />} />
-                <Route path="subscriptions"   element={<ComingSoon title="Subscriptions" />} />
+                <Route path="subscriptions"   element={<SubscriptionsPage />} />
                 <Route path="users/customers" element={<ComingSoon title="Customers" />} />
                 <Route path="users/employees" element={<ComingSoon title="Employees" />} />
                 <Route path="users/roles"     element={<ComingSoon title="Roles" />} />
@@ -67,7 +66,6 @@ export default function App() {
           </ProtectedRoute>
         } />
 
-        {/* Employee */}
         <Route path="/employee/*" element={
           <ProtectedRoute allowedRoles={['employee']}>
             <DashboardLayout>
@@ -83,7 +81,6 @@ export default function App() {
           </ProtectedRoute>
         } />
 
-        {/* Customer */}
         <Route path="/customer/*" element={
           <ProtectedRoute allowedRoles={['customer']}>
             <DashboardLayout>
