@@ -12,6 +12,10 @@ import AdminDashboard        from '../pages/admin/AdminDashboard';
 import AdminInvitesPage      from '../pages/admin/AdminInvitesPage';
 import AdminInviteDetailPage from '../pages/admin/AdminInviteDetailPage';
 import SubscriptionsPage     from '../pages/admin/SubscriptionsPage';
+import CustomersPage         from '../pages/admin/CustomersPage';
+import CustomerDetailPage    from '../pages/admin/CustomerDetailPage';
+import EmployeesPage         from '../pages/admin/EmployeesPage';
+import RolesPage             from '../pages/admin/RolesPage';
 import ProfilePage           from '../pages/profile/ProfilePage';
 import { LINKS } from '../lib/links';
 
@@ -50,17 +54,18 @@ export default function App() {
           <ProtectedRoute allowedRoles={['admin']}>
             <DashboardLayout>
               <Routes>
-                <Route index                  element={<AdminDashboard />} />
-                <Route path="profile"         element={<ProfilePage />} />
-                <Route path="invites"         element={<AdminInvitesPage />} />
-                <Route path="invites/:id"     element={<AdminInviteDetailPage />} />
-                <Route path="subscriptions"   element={<SubscriptionsPage />} />
-                <Route path="users/customers" element={<ComingSoon title="Customers" />} />
-                <Route path="users/employees" element={<ComingSoon title="Employees" />} />
-                <Route path="users/roles"     element={<ComingSoon title="Roles" />} />
-                <Route path="crm"             element={<ComingSoon title="CRM" />} />
-                <Route path="issues"          element={<ComingSoon title="Issues" />} />
-                <Route path="payments"        element={<ComingSoon title="Payments" />} />
+                <Route index                      element={<AdminDashboard />} />
+                <Route path="profile"             element={<ProfilePage />} />
+                <Route path="invites"             element={<AdminInvitesPage />} />
+                <Route path="invites/:id"         element={<AdminInviteDetailPage />} />
+                <Route path="subscriptions"       element={<SubscriptionsPage />} />
+                <Route path="users/customers"     element={<CustomersPage />} />
+                <Route path="users/customers/:id" element={<CustomerDetailPage />} />
+                <Route path="users/employees"     element={<EmployeesPage />} />
+                <Route path="users/roles"         element={<RolesPage />} />
+                <Route path="crm"                 element={<ComingSoon title="CRM" />} />
+                <Route path="issues"              element={<ComingSoon title="Issues" />} />
+                <Route path="payments"            element={<ComingSoon title="Payments" />} />
               </Routes>
             </DashboardLayout>
           </ProtectedRoute>
