@@ -16,6 +16,10 @@ import CustomersPage         from '../pages/admin/CustomersPage';
 import CustomerDetailPage    from '../pages/admin/CustomerDetailPage';
 import EmployeesPage         from '../pages/admin/EmployeesPage';
 import RolesPage             from '../pages/admin/RolesPage';
+import CRMPage               from '../pages/admin/CRMPage';
+import IssueDetailPage       from '../pages/admin/IssueDetailPage';
+import IssuesPage            from '../pages/admin/IssuesPage';
+import PaymentsPage          from '../pages/admin/PaymentsPage';
 import ProfilePage           from '../pages/profile/ProfilePage';
 import { LINKS } from '../lib/links';
 
@@ -63,9 +67,10 @@ export default function App() {
                 <Route path="users/customers/:id" element={<CustomerDetailPage />} />
                 <Route path="users/employees"     element={<EmployeesPage />} />
                 <Route path="users/roles"         element={<RolesPage />} />
-                <Route path="crm"                 element={<ComingSoon title="CRM" />} />
-                <Route path="issues"              element={<ComingSoon title="Issues" />} />
-                <Route path="payments"            element={<ComingSoon title="Payments" />} />
+                <Route path="crm"                 element={<CRMPage />} />
+                <Route path="crm/:id"             element={<IssueDetailPage />} />
+                <Route path="issues"              element={<IssuesPage />} />
+                <Route path="payments"            element={<PaymentsPage />} />
               </Routes>
             </DashboardLayout>
           </ProtectedRoute>
@@ -78,7 +83,8 @@ export default function App() {
                 <Route index                element={<ComingSoon title="Employee Dashboard" />} />
                 <Route path="profile"       element={<ProfilePage />} />
                 <Route path="tickets"       element={<ComingSoon title="My Tickets" />} />
-                <Route path="crm"           element={<ComingSoon title="CRM Board" />} />
+                <Route path="crm"           element={<CRMPage />} />
+                <Route path="crm/:id"       element={<IssueDetailPage />} />
                 <Route path="customers"     element={<ComingSoon title="Customers" />} />
                 <Route path="notifications" element={<ComingSoon title="Notifications" />} />
               </Routes>
