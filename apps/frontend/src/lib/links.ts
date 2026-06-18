@@ -11,6 +11,7 @@ export const LINKS = {
 
   ADMIN_DASHBOARD:     '/admin',
   ADMIN_INVITES:       '/admin/invites',
+  ADMIN_PROFILE:       '/admin/profile',
   ADMIN_SUBSCRIPTIONS: '/admin/subscriptions',
   ADMIN_CUSTOMERS:     '/admin/users/customers',
   ADMIN_EMPLOYEES:     '/admin/users/employees',
@@ -24,10 +25,12 @@ export const LINKS = {
   EMPLOYEE_CRM:           '/employee/crm',
   EMPLOYEE_CUSTOMERS:     '/employee/customers',
   EMPLOYEE_NOTIFICATIONS: '/employee/notifications',
+  EMPLOYEE_PROFILE:       '/employee/profile',
 
   CUSTOMER_DASHBOARD:     '/customer',
   CUSTOMER_SUBSCRIPTIONS: '/customer/subscriptions',
   CUSTOMER_ISSUES:        '/customer/issues',
   CUSTOMER_PAYMENTS:      '/customer/payments',
   CUSTOMER_FAQS:          '/customer/faqs',
+  CUSTOMER_PROFILE:       '/customer/profile',
 } as const;

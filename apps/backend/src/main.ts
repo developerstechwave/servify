@@ -1,6 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
+import { join } from 'path';
+import * as express from 'express';
 import { AppModule } from './app/app.module';
 
 async function bootstrap() {
@@ -10,16 +12,19 @@ async function bootstrap() {
 
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true,
+      whitelist:            true,
       forbidNonWhitelisted: true,
-      transform: true,
+      transform:            true,
     }),
   );
 
   app.enableCors({
-    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+    origin:      process.env.CLIENT_URL || 'http://localhost:4200',
     credentials: true,
   });
+
+  // Serve uploaded files statically
+  app.use('/uploads', express.static(join(process.cwd(), 'apps/backend/uploads')));
 
   app.setGlobalPrefix('api');
 

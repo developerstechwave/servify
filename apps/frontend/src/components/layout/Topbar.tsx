@@ -15,6 +15,15 @@ interface TopbarProps {
   breadcrumbs: BreadcrumbItem[];
 }
 
+function getProfileLink(role: string) {
+  switch (role) {
+    case 'admin':    return LINKS.ADMIN_PROFILE;
+    case 'employee': return LINKS.EMPLOYEE_PROFILE;
+    case 'customer': return LINKS.CUSTOMER_PROFILE;
+    default:         return null;
+  }
+}
+
 export default function Topbar({ breadcrumbs }: TopbarProps) {
   const navigate = useNavigate();
   const { user, clearAuth } = useAuthStore();
@@ -26,23 +35,20 @@ export default function Topbar({ breadcrumbs }: TopbarProps) {
     navigate(LINKS.LOGIN);
   };
 
+  const profileLink = getProfileLink(user?.role ?? '');
+
   const userMenuItems: MenuProps['items'] = [
-    {
+    ...(profileLink ? [{
       key:   'profile',
       label: 'Profile',
-    },
-    {
-      type: 'divider',
-    },
-    {
-      key:     'logout',
-      label:   'Logout',
-      danger:  true,
-    },
+    }] : []),
+    { type: 'divider' as const },
+    { key: 'logout', label: 'Logout', danger: true },
   ];
 
   const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
-    if (key === 'logout') handleLogout();
+    if (key === 'logout')  handleLogout();
+    if (key === 'profile' && profileLink) navigate(profileLink);
   };
 
   const initials = user
@@ -57,7 +63,6 @@ export default function Topbar({ breadcrumbs }: TopbarProps) {
 
   return (
     <header className="h-16 flex items-center justify-between px-6 bg-white border-b border-border flex-shrink-0">
-      {/* Breadcrumb */}
       <div className="flex items-center gap-2">
         <button
           onClick={() => navigate(-1)}
@@ -89,9 +94,7 @@ export default function Topbar({ breadcrumbs }: TopbarProps) {
         ))}
       </div>
 
-      {/* Right side */}
       <div className="flex items-center gap-4">
-        {/* Notification bell */}
         <button className="relative text-text-muted hover:text-primary transition-colors">
           <Badge count={notifCount} size="small">
             <svg width="22" height="22" fill="none" viewBox="0 0 24 24"
@@ -101,7 +104,6 @@ export default function Topbar({ breadcrumbs }: TopbarProps) {
           </Badge>
         </button>
 
-        {/* User dropdown */}
         <Dropdown
           menu={{ items: userMenuItems, onClick: handleMenuClick }}
           trigger={['click']}
@@ -110,7 +112,7 @@ export default function Topbar({ breadcrumbs }: TopbarProps) {
           <button className="flex items-center gap-2 hover:bg-secondary rounded-xl px-3 py-2 transition-colors">
             <div
               className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
-              style={{ background: 'rgba(101, 16, 127, 1)' }}
+              style={{ background: 'rgba(101,16,127,1)' }}
             >
               {initials}
             </div>

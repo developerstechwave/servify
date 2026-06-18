@@ -11,18 +11,11 @@ export class DashboardService {
   ) {}
 
   async getSuperAdminStats() {
-    const [
-      totalOrganisations,
-      totalCustomers,
-      totalEmployees,
-    ] = await Promise.all([
+    const [totalOrganisations, totalCustomers, totalEmployees] = await Promise.all([
       this.userRepo.count({ where: { role: UserRole.ADMIN } }),
       this.userRepo.count({ where: { role: UserRole.CUSTOMER } }),
       this.userRepo.count({ where: { role: UserRole.EMPLOYEE } }),
     ]);
-
-    const revenueAnalytics = this.generateMonthlyData();
-    const customerActivity = this.generateMonthlyBarData();
 
     return {
       stats: {
@@ -30,31 +23,38 @@ export class DashboardService {
         totalCustomers:     { value: totalCustomers,     change: -12.34 },
         totalEmployees:     { value: totalEmployees,     change: -12.34 },
       },
-      revenueAnalytics,
-      customerActivity,
+      revenueAnalytics: this.generateMonthlyData(),
+      customerActivity: this.generateMonthlyBarData(),
     };
   }
 
   async getAdminStats(organisationId: string) {
     const [
-      totalCustomers,
-      totalEmployees,
+      verifiedCustomers,
+      newCustomers,
+      subAdmins,
     ] = await Promise.all([
-      this.userRepo.count({ where: { role: UserRole.CUSTOMER, organisationId } }),
-      this.userRepo.count({ where: { role: UserRole.EMPLOYEE, organisationId } }),
+      this.userRepo.count({
+        where: { role: UserRole.CUSTOMER, organisationId, isActive: true },
+      }),
+      this.userRepo.count({
+        where: { role: UserRole.CUSTOMER, organisationId },
+      }),
+      this.userRepo.count({
+        where: { role: UserRole.EMPLOYEE, organisationId },
+      }),
     ]);
-
-    const revenueAnalytics = this.generateMonthlyData();
-    const customerActivity = this.generateMonthlyBarData();
 
     return {
       stats: {
-        totalCustomers: { value: totalCustomers, change: +8.5  },
-        totalEmployees: { value: totalEmployees, change: +3.2  },
-        openTickets:    { value: 0,              change: -5.1  },
+        verifiedCustomers: { value: verifiedCustomers, change: +12.34 },
+        newCustomers:      { value: newCustomers,      change: -12.34 },
+        openTickets:       { value: 0,                 change: +12.34 },
+        subAdmins:         { value: subAdmins,         change: +12.34 },
       },
-      revenueAnalytics,
-      customerActivity,
+      revenueAnalytics: this.generateRevenueData(),
+      customerActivity: this.generateMonthlyBarData(),
+      topLocations:     this.generateTopLocations(),
     };
   }
 
@@ -66,11 +66,30 @@ export class DashboardService {
     }));
   }
 
+  private generateRevenueData() {
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return months.map((month) => ({
+      month,
+      success: Math.floor(Math.random() * 8000) + 2000,
+      pending: Math.floor(Math.random() * 6000) + 1000,
+      failed:  Math.floor(Math.random() * 3000) + 500,
+    }));
+  }
+
   private generateMonthlyBarData() {
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     return months.map((month) => ({
       month,
       value: Math.floor(Math.random() * 70000) + 5000,
     }));
+  }
+
+  private generateTopLocations() {
+    return [
+      { country: 'Ghana',        value: 38.6, color: 'rgba(101,16,127,1)' },
+      { country: 'Nigeria',      value: 22.5, color: 'rgba(101,16,127,0.6)' },
+      { country: 'Italy',        value: 30.8, color: 'rgba(101,16,127,0.35)' },
+      { country: 'South Africa', value: 8.1,  color: 'rgba(101,16,127,0.15)' },
+    ];
   }
 }
