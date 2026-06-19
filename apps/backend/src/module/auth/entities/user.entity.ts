@@ -57,6 +57,29 @@ export class User {
   @Column({ nullable: true, type: 'text' })
   description: string;
 
+  // Customer-specific fields
+  @Column({ nullable: true })
+  idType: string;
+
+  @Column({ nullable: true })
+  idNumber: string;
+
+  @Column({ nullable: true })
+  plans: string;
+
+  @Column({ nullable: true })
+  dedicatedLine: string;
+
+  @Column({ nullable: true })
+  postcode: string;
+
+  @Column({ nullable: true })
+  billingType: string;
+
+  // Employee-specific
+  @Column({ nullable: true })
+  employeeRole: string;
+
   @Column({ default: true })
   isActive: boolean;
 

@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Tooltip } from 'antd';
 import type { NavItem } from '../../lib/nav.config';
 import { ServifyLogoMark } from '../auth/AuthLogo';
+import { useAuthStore } from '../../store/auth.store';
 
 interface SidebarProps {
   navItems: NavItem[];
@@ -11,21 +12,18 @@ interface SidebarProps {
 export default function Sidebar({ navItems }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const navigate = useNavigate();
-  const location = useLocation();
+  const navigate  = useNavigate();
+  const location  = useLocation();
+  const { user }  = useAuthStore();
+  const isCustomer = user?.role === 'customer';
 
   const isActive = (path?: string) => {
     if (!path) return false;
-    // Exact match for index/dashboard routes
     if (location.pathname === path) return true;
-    // For non-index routes, check startsWith but ensure it's not a partial segment match
-    const segments = path.split('/').filter(Boolean);
-    const lastSegment = segments[segments.length - 1];
-    // If the last segment is a role root (super-admin, admin, employee, customer) treat as exact
+    const segments  = path.split('/').filter(Boolean);
+    const last      = segments[segments.length - 1];
     const roleRoots = ['super-admin', 'admin', 'employee', 'customer'];
-    if (roleRoots.includes(lastSegment)) {
-      return location.pathname === path;
-    }
+    if (roleRoots.includes(last)) return location.pathname === path;
     return location.pathname.startsWith(path + '/') || location.pathname === path;
   };
 
@@ -75,7 +73,6 @@ export default function Sidebar({ navItems }: SidebarProps) {
         {navItems.map((item) => {
           const active       = isActive(item.path) || isChildActive(item);
           const dropdownOpen = openDropdown === item.key;
-
           return (
             <div key={item.key}>
               <Tooltip title={collapsed ? item.label : ''} placement="right">
@@ -93,15 +90,11 @@ export default function Sidebar({ navItems }: SidebarProps) {
                   <span className="flex-shrink-0">{item.icon}</span>
                   {!collapsed && (
                     <>
-                      <span className="flex-1 text-sm font-medium truncate">
-                        {item.label}
-                      </span>
+                      <span className="flex-1 text-sm font-medium truncate">{item.label}</span>
                       {item.children && (
-                        <svg
-                          width="16" height="16" fill="none" viewBox="0 0 24 24"
+                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24"
                           stroke="currentColor" strokeWidth={2}
-                          className={`transition-transform duration-200 flex-shrink-0 ${dropdownOpen ? 'rotate-180' : ''}`}
-                        >
+                          className={`transition-transform duration-200 flex-shrink-0 ${dropdownOpen ? 'rotate-180' : ''}`}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                         </svg>
                       )}
@@ -110,7 +103,6 @@ export default function Sidebar({ navItems }: SidebarProps) {
                 </button>
               </Tooltip>
 
-              {/* Dropdown children */}
               {item.children && !collapsed && dropdownOpen && (
                 <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/20 pl-3">
                   {item.children.map((child) => (
@@ -136,6 +128,32 @@ export default function Sidebar({ navItems }: SidebarProps) {
           );
         })}
       </nav>
+
+      {/* Need Help — customer only */}
+      {isCustomer && !collapsed && (
+        <div className="px-3 pb-4">
+          <div
+            className="rounded-2xl p-4 text-center"
+            style={{ background: 'rgba(255,255,255,0.08)' }}
+          >
+            <p className="text-white font-semibold text-sm mb-1">Need Help?</p>
+            <p className="text-white/60 text-xs mb-3">
+              Is there anything our Team can assist you with today
+            </p>
+            <button
+              className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold transition-colors"
+              style={{ background: 'rgba(255,255,255,0.15)', color: 'white' }}
+            >
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round"
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              Contact support
+            </button>
+          </div>
+        </div>
+      )}
     </aside>
   );
 }

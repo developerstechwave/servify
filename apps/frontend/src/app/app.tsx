@@ -20,6 +20,7 @@ import CRMPage               from '../pages/admin/CRMPage';
 import IssueDetailPage       from '../pages/admin/IssueDetailPage';
 import IssuesPage            from '../pages/admin/IssuesPage';
 import PaymentsPage          from '../pages/admin/PaymentsPage';
+import CustomerDashboard     from '../pages/customer/CustomerDashboard';
 import ProfilePage           from '../pages/profile/ProfilePage';
 import { LINKS } from '../lib/links';
 
@@ -96,7 +97,7 @@ export default function App() {
           <ProtectedRoute allowedRoles={['customer']}>
             <DashboardLayout>
               <Routes>
-                <Route index                element={<ComingSoon title="Customer Dashboard" />} />
+                <Route index                element={<CustomerDashboard />} />
                 <Route path="profile"       element={<ProfilePage />} />
                 <Route path="subscriptions" element={<ComingSoon title="Subscriptions" />} />
                 <Route path="issues"        element={<ComingSoon title="Issues" />} />

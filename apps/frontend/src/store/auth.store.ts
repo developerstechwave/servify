@@ -7,6 +7,8 @@ interface AuthUser {
   lastName: string;
   role: string;
   organisationId: string | null;
+  avatar?: string | null;
+  phone?: string | null;
 }
 
 interface AuthState {
