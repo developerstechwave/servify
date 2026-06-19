@@ -165,7 +165,7 @@ export default function AdminDashboard() {
                 tick={{ fontSize: 11 }} axisLine={false} tickLine={false}
                 tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
               />
-              <Tooltip formatter={(v: number) => [v.toLocaleString(), 'Customers']} />
+              <Tooltip formatter={(v) => [Number(v).toLocaleString(), 'Customers']} />
               <Bar dataKey="value" fill="rgba(101,16,127,0.5)" radius={[4,4,0,0]} maxBarSize={32} />
             </BarChart>
           </ResponsiveContainer>

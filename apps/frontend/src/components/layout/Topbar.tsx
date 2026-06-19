@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Badge, Dropdown } from 'antd';
 import type { MenuProps } from 'antd';
 import { useAuthStore } from '../../store/auth.store';
