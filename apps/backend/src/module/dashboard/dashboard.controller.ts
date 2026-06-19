@@ -6,19 +6,28 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { UserRole } from '../auth/entities/user.entity';
 
 @Controller('dashboard')
-@UseGuards(AuthGuard('jwt'), RolesGuard)
+@UseGuards(AuthGuard('jwt'))
 export class DashboardController {
-  constructor(private dashboardService: DashboardService) {}
+  constructor(private service: DashboardService) {}
 
   @Get('super-admin')
+  @UseGuards(RolesGuard)
   @Roles(UserRole.SUPER_ADMIN)
-  getSuperAdminDashboard() {
-    return this.dashboardService.getSuperAdminStats();
+  getSuperAdminStats() {
+    return this.service.getSuperAdminStats();
   }
 
   @Get('admin')
+  @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
-  getAdminDashboard(@Req() req: any) {
-    return this.dashboardService.getAdminStats(req.user.organisationId);
+  getAdminStats(@Req() req: any) {
+    return this.service.getAdminStats(req.user.organisationId);
+  }
+
+  @Get('employee')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.EMPLOYEE)
+  getEmployeeStats(@Req() req: any) {
+    return this.service.getEmployeeStats(req.user.id, req.user.organisationId);
   }
 }

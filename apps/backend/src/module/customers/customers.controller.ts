@@ -10,7 +10,7 @@ import { UserRole } from '../auth/entities/user.entity';
 
 @Controller('customers')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
-@Roles(UserRole.ADMIN)
+@Roles(UserRole.ADMIN, UserRole.EMPLOYEE)
 export class CustomersController {
   constructor(private service: CustomersService) {}
 
