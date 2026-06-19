@@ -103,6 +103,7 @@ export class EmployeesService {
       (user as any).employeeRole = emp.role || 'Employee';
 
       await this.userRepo.save(user);
+      console.log(`Employee created: ${emp.email} | Password: ${password}`);
 
       await this.sendMailSafely(() =>
         this.mailService.sendWelcomeEmployee({

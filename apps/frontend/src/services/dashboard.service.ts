@@ -10,4 +10,9 @@ export const dashboardService = {
     const { data } = await api.get('/dashboard/admin');
     return data;
   },
+
+  async getEmployeeStats() {
+    const { data } = await api.get('/dashboard/employee');
+    return data;
+  },
 };

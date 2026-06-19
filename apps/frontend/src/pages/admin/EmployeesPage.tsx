@@ -31,62 +31,6 @@ const StatusTag = ({ isActive }: { isActive: boolean }) => (
   </span>
 );
 
-const EmployeeForm = ({ prefix }: { prefix: string | number }) => (
-  <div className="grid grid-cols-2 gap-4">
-    <Form.Item
-      label={<span className="text-sm font-medium text-text-main">Full Name</span>}
-      name={[prefix, 'fullName']}
-      rules={[{ required: true, message: 'Name is required' }]}
-    >
-      <Input size="large" placeholder="Enter full name" className="rounded-xl" />
-    </Form.Item>
-    <Form.Item
-      label={<span className="text-sm font-medium text-text-main">Email</span>}
-      name={[prefix, 'email']}
-      rules={[
-        { required: true, message: 'Email is required' },
-        { type: 'email', message: 'Enter valid email' },
-      ]}
-    >
-      <Input size="large" placeholder="Enter email" className="rounded-xl" />
-    </Form.Item>
-    <Form.Item
-      label={<span className="text-sm font-medium text-text-main">Phone</span>}
-      name={[prefix, 'phone']}
-    >
-      <Input size="large" placeholder="Enter phone number" className="rounded-xl" />
-    </Form.Item>
-    <Form.Item
-      label={<span className="text-sm font-medium text-text-main">Role</span>}
-      name={[prefix, 'role']}
-    >
-      <Select size="large" placeholder="Select role" className="rounded-xl">
-        <Select.Option value="Admin">Admin</Select.Option>
-        <Select.Option value="Sales">Sales</Select.Option>
-        <Select.Option value="Support">Support</Select.Option>
-        <Select.Option value="Technical">Technical</Select.Option>
-        <Select.Option value="HR">HR</Select.Option>
-      </Select>
-    </Form.Item>
-    <Form.Item
-      label={<span className="text-sm font-medium text-text-main">Region</span>}
-      name={[prefix, 'region']}
-    >
-      <Select size="large" placeholder="Select region" className="rounded-xl">
-        {REGIONS.map((r) => <Select.Option key={r} value={r}>{r}</Select.Option>)}
-      </Select>
-    </Form.Item>
-    <Form.Item
-      label={<span className="text-sm font-medium text-text-main">Country</span>}
-      name={[prefix, 'country']}
-    >
-      <Select size="large" placeholder="Select country" className="rounded-xl">
-        {COUNTRIES.map((c) => <Select.Option key={c} value={c}>{c}</Select.Option>)}
-      </Select>
-    </Form.Item>
-  </div>
-);
-
 export default function EmployeesPage() {
   const [data, setData]             = useState<Employee[]>([]);
   const [loading, setLoading]       = useState(true);
@@ -118,7 +62,12 @@ export default function EmployeesPage() {
   const handleAdd = async (values: any) => {
     try {
       setSaving(true);
-      const employees = Array.from({ length: employeeCount }, (_, i) => values.employees[i]).filter(Boolean);
+      // values.employees is an array from Form.List
+      const employees = (values.employees || []).filter(Boolean);
+      if (employees.length === 0) {
+        message.error('Please fill in at least one employee');
+        return;
+      }
       await employeesService.create(employees);
       message.success('Employee(s) added and welcome email sent');
       setAddModal(false);
@@ -196,17 +145,17 @@ export default function EmployeesPage() {
       },
       { key: 'delete', label: 'Delete', danger: true, onClick: () => setDeleteTarget(record) },
       {
-        key:   'toggle',
-        label: record.isActive ? 'Deactivate' : 'Activate',
+        key:     'toggle',
+        label:   record.isActive ? 'Deactivate' : 'Activate',
         onClick: () => handleToggleStatus(record),
       },
     ],
   });
 
   const filterItems: MenuProps['items'] = [
-    { key: 'all',         label: 'All',         onClick: () => setFilter(undefined) },
-    { key: 'verified',    label: 'Verified',    onClick: () => setFilter('verified') },
-    { key: 'deactivated', label: 'Deactivated', onClick: () => setFilter('deactivated') },
+    { key: 'all',         label: 'All',         onClick: () => setFilter(undefined)       },
+    { key: 'verified',    label: 'Verified',    onClick: () => setFilter('verified')      },
+    { key: 'deactivated', label: 'Deactivated', onClick: () => setFilter('deactivated')   },
   ];
 
   const columns = [
@@ -254,6 +203,18 @@ export default function EmployeesPage() {
       ),
     },
   ];
+
+  const RoleSelect = ({ name }: { name: (string | number)[] }) => (
+    <Form.Item label={<span className="text-sm font-medium text-text-main">Role</span>} name={name}>
+      <Select size="large" placeholder="Select role" className="rounded-xl">
+        <Select.Option value="Technician">Technician</Select.Option>
+        <Select.Option value="Sales">Sales</Select.Option>
+        <Select.Option value="Support">Support</Select.Option>
+        <Select.Option value="Technical">Technical</Select.Option>
+        <Select.Option value="HR">HR</Select.Option>
+      </Select>
+    </Form.Item>
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -305,7 +266,7 @@ export default function EmployeesPage() {
         </div>
       </div>
 
-      {/* Add Employee Modal */}
+      {/* Add Employee Modal — using Form.List */}
       <Modal
         open={addModal}
         onCancel={() => { setAddModal(false); addForm.resetFields(); setEmployeeCount(1); }}
@@ -315,42 +276,88 @@ export default function EmployeesPage() {
         title={<span className="font-bold text-text-main">Add New Employee</span>}
       >
         <Form form={addForm} layout="vertical" requiredMark={false} onFinish={handleAdd} className="mt-4">
-          <div className="max-h-[60vh] overflow-y-auto pr-1">
-            {Array.from({ length: employeeCount }, (_, i) => (
-              <div key={i}>
-                {employeeCount > 1 && (
-                  <div className="flex items-center justify-between mb-3">
-                    <p className="font-semibold text-text-main">Employee {i + 1}</p>
-                    {i > 0 && (
-                      <button type="button" onClick={() => setEmployeeCount((c) => c - 1)}
-                        className="text-red-500 hover:text-red-600">
-                        <MinusCircleOutlined />
-                      </button>
-                    )}
-                  </div>
-                )}
-                <EmployeeForm prefix={`employees.${i}`} />
-                {i < employeeCount - 1 && <div className="border-t border-border my-4" />}
-              </div>
-            ))}
-          </div>
+          <Form.List name="employees" initialValue={[{}]}>
+            {(fields, { add, remove }) => (
+              <>
+                <div className="max-h-[60vh] overflow-y-auto pr-1 flex flex-col gap-4">
+                  {fields.map((field, index) => (
+                    <div key={field.key}>
+                      {fields.length > 1 && (
+                        <div className="flex items-center justify-between mb-3">
+                          <p className="font-semibold text-text-main">Employee {index + 1}</p>
+                          <button type="button" onClick={() => remove(field.name)}
+                            className="text-red-400 hover:text-red-500">
+                            <MinusCircleOutlined style={{ fontSize: 18 }} />
+                          </button>
+                        </div>
+                      )}
+                      <div className="grid grid-cols-2 gap-4">
+                        <Form.Item
+                          label={<span className="text-sm font-medium text-text-main">Full Name</span>}
+                          name={[field.name, 'fullName']}
+                          rules={[{ required: true, message: 'Name is required' }]}
+                        >
+                          <Input size="large" placeholder="Enter full name" className="rounded-xl" />
+                        </Form.Item>
+                        <Form.Item
+                          label={<span className="text-sm font-medium text-text-main">Email</span>}
+                          name={[field.name, 'email']}
+                          rules={[
+                            { required: true, message: 'Email is required' },
+                            { type: 'email', message: 'Enter valid email' },
+                          ]}
+                        >
+                          <Input size="large" placeholder="Enter email" className="rounded-xl" />
+                        </Form.Item>
+                        <Form.Item
+                          label={<span className="text-sm font-medium text-text-main">Phone</span>}
+                          name={[field.name, 'phone']}
+                        >
+                          <Input size="large" placeholder="Enter phone number" className="rounded-xl" />
+                        </Form.Item>
+                        <RoleSelect name={[field.name, 'role']} />
+                        <Form.Item
+                          label={<span className="text-sm font-medium text-text-main">Region</span>}
+                          name={[field.name, 'region']}
+                        >
+                          <Select size="large" placeholder="Select region" className="rounded-xl">
+                            {REGIONS.map((r) => <Select.Option key={r} value={r}>{r}</Select.Option>)}
+                          </Select>
+                        </Form.Item>
+                        <Form.Item
+                          label={<span className="text-sm font-medium text-text-main">Country</span>}
+                          name={[field.name, 'country']}
+                        >
+                          <Select size="large" placeholder="Select country" className="rounded-xl">
+                            {COUNTRIES.map((c) => <Select.Option key={c} value={c}>{c}</Select.Option>)}
+                          </Select>
+                        </Form.Item>
+                      </div>
+                      {index < fields.length - 1 && <div className="border-t border-border mt-2" />}
+                    </div>
+                  ))}
+                </div>
 
-          <button
-            type="button"
-            onClick={() => setEmployeeCount((c) => c + 1)}
-            className="flex items-center gap-2 text-sm font-medium text-primary mb-4 mt-2 hover:text-primary-hover"
-          >
-            <PlusOutlined />
-            Add more
-          </button>
+                <button
+                  type="button"
+                  onClick={() => add()}
+                  className="flex items-center gap-2 text-sm font-medium text-primary mt-3 mb-5 hover:text-primary-hover"
+                >
+                  <PlusOutlined />
+                  Add more
+                </button>
+              </>
+            )}
+          </Form.List>
 
           <div className="flex gap-3">
-            <Button size="large" onClick={() => { setAddModal(false); addForm.resetFields(); setEmployeeCount(1); }}
+            <Button size="large"
+              onClick={() => { setAddModal(false); addForm.resetFields(); setEmployeeCount(1); }}
               className="flex-1 h-11 rounded-xl">Cancel</Button>
             <Button type="primary" htmlType="submit" size="large" loading={saving}
               className="flex-1 h-11 rounded-xl font-semibold"
               style={{ background: 'rgba(101,16,127,1)', border: 'none' }}>
-              {employeeCount > 1 ? 'Add Employees' : 'Add Employee'}
+              Add Employee
             </Button>
           </div>
         </Form>
@@ -360,25 +367,17 @@ export default function EmployeesPage() {
       <Modal
         open={!!editTarget}
         onCancel={() => { setEditTarget(null); editForm.resetFields(); }}
-        footer={null}
-        centered
-        width={560}
+        footer={null} centered width={560}
         title={<span className="font-bold text-text-main">Edit Employee</span>}
       >
         <Form form={editForm} layout="vertical" requiredMark={false} onFinish={handleEdit} className="mt-4">
           <div className="grid grid-cols-2 gap-4">
-            <Form.Item
-              label={<span className="text-sm font-medium text-text-main">Full Name</span>}
-              name="fullName"
-              rules={[{ required: true, message: 'Name is required' }]}
-            >
+            <Form.Item label={<span className="text-sm font-medium text-text-main">Full Name</span>}
+              name="fullName" rules={[{ required: true, message: 'Name is required' }]}>
               <Input size="large" className="rounded-xl" />
             </Form.Item>
-            <Form.Item
-              label={<span className="text-sm font-medium text-text-main">Email</span>}
-              name="email"
-              rules={[{ type: 'email', message: 'Enter valid email' }]}
-            >
+            <Form.Item label={<span className="text-sm font-medium text-text-main">Email</span>}
+              name="email" rules={[{ type: 'email', message: 'Enter valid email' }]}>
               <Input size="large" className="rounded-xl" />
             </Form.Item>
             <Form.Item label={<span className="text-sm font-medium text-text-main">Phone</span>} name="phone">
@@ -386,7 +385,7 @@ export default function EmployeesPage() {
             </Form.Item>
             <Form.Item label={<span className="text-sm font-medium text-text-main">Role</span>} name="role">
               <Select size="large" className="rounded-xl">
-                <Select.Option value="Admin">Admin</Select.Option>
+                <Select.Option value="Technician">Technician</Select.Option>
                 <Select.Option value="Sales">Sales</Select.Option>
                 <Select.Option value="Support">Support</Select.Option>
                 <Select.Option value="Technical">Technical</Select.Option>
@@ -420,17 +419,13 @@ export default function EmployeesPage() {
       <Modal
         open={!!deleteTarget}
         onCancel={() => setDeleteTarget(null)}
-        footer={null}
-        centered
-        width={400}
+        footer={null} centered width={400}
         title={<span className="font-bold text-text-main">Delete Employee</span>}
       >
         <div className="py-4 px-2">
           <div className="rounded-xl p-4 mb-6 text-center"
             style={{ border: '1px dashed rgba(220,38,38,0.3)', background: 'rgba(220,38,38,0.03)' }}>
-            <p className="text-text-main font-medium">
-              Are you sure you want to delete employee?
-            </p>
+            <p className="text-text-main font-medium">Are you sure you want to delete employee?</p>
           </div>
           <div className="flex gap-3">
             <Button size="large" onClick={() => setDeleteTarget(null)}

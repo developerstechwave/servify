@@ -25,7 +25,7 @@ export default function LoginForm() {
       switch (data.user.role) {
         case 'super_admin': navigate(LINKS.SUPER_ADMIN_DASHBOARD); break;
         case 'admin':       navigate(LINKS.ADMIN_DASHBOARD);       break;
-        case 'employee':    navigate(LINKS.EMPLOYEE_CRM);          break;
+        case 'employee':    navigate(LINKS.EMPLOYEE_DASHBOARD);          break;
         case 'customer':    navigate(LINKS.CUSTOMER_DASHBOARD);    break;
         default:            navigate(LINKS.LOGIN);
       }

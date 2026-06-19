@@ -20,6 +20,9 @@ import CRMPage                   from '../pages/admin/CRMPage';
 import IssueDetailPage           from '../pages/admin/IssueDetailPage';
 import IssuesPage                from '../pages/admin/IssuesPage';
 import PaymentsPage              from '../pages/admin/PaymentsPage';
+import EmployeeDashboard         from '../pages/employee/EmployeeDashboard';
+import MyTicketsPage             from '../pages/employee/MyTicketsPage';
+import EmployeeCustomersPage     from '../pages/employee/CustomersPage';
 import CustomerDashboard         from '../pages/customer/CustomerDashboard';
 import CustomerSubscriptionsPage from '../pages/customer/SubscriptionsPage';
 import SubscriptionDetailPage    from '../pages/customer/SubscriptionDetailPage';
@@ -87,12 +90,12 @@ export default function App() {
           <ProtectedRoute allowedRoles={['employee']}>
             <DashboardLayout>
               <Routes>
-                <Route index                element={<ComingSoon title="Employee Dashboard" />} />
+                <Route index                element={<EmployeeDashboard />} />
                 <Route path="profile"       element={<ProfilePage />} />
-                <Route path="tickets"       element={<ComingSoon title="My Tickets" />} />
+                <Route path="tickets"       element={<MyTicketsPage />} />
                 <Route path="crm"           element={<CRMPage />} />
                 <Route path="crm/:id"       element={<IssueDetailPage />} />
-                <Route path="customers"     element={<ComingSoon title="Customers" />} />
+                <Route path="customers"     element={<EmployeeCustomersPage />} />
                 <Route path="notifications" element={<ComingSoon title="Notifications" />} />
               </Routes>
             </DashboardLayout>
