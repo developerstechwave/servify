@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Button, Modal, Table, Input, message, Spin, Tabs } from 'antd';
+import { Button, Modal, Table, Input, message, Spin } from 'antd';
 import { customersService } from '../../services/customers.service';
 import { LINKS } from '../../lib/links';
 

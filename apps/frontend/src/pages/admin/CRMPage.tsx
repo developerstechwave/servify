@@ -88,7 +88,7 @@ const IssueCard = ({
           ) : (
             <span className="text-xs text-text-muted">Unassigned</span>
           )}
-          <Dropdown menu={cardMenu} trigger={['click']} onClick={(e) => e.stopPropagation()}>
+          <Dropdown menu={cardMenu} trigger={['click']}>
             <button
               className="text-text-muted hover:text-text-main"
               onClick={(e) => e.stopPropagation()}
