@@ -1,26 +1,28 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AuthModule }          from '../module/auth/auth.module';
-import { DashboardModule }     from '../module/dashboard/dashboard.module';
-import { JoinRequestsModule }  from '../module/join-requests/join-requests.module';
-import { OrganisationsModule } from '../module/organisations/organisations.module';
-import { ProfileModule }       from '../module/profile/profile.module';
-import { SubscriptionsModule } from '../module/subscriptions/subscriptions.module';
-import { CustomersModule }     from '../module/customers/customers.module';
-import { EmployeesModule }     from '../module/employees/employees.module';
-import { RolesModule }         from '../module/roles/roles.module';
-import { IssuesModule }        from '../module/issues/issues.module';
-import { PaymentsModule }      from '../module/payments/payments.module';
-import { User }          from '../module/auth/entities/user.entity';
-import { Invitation }    from '../module/auth/entities/invitation.entity';
-import { JoinRequest }   from '../module/join-requests/entities/join-request.entity';
-import { Product }       from '../module/subscriptions/entities/product.entity';
-import { Service }       from '../module/subscriptions/entities/service.entity';
-import { OrgRole }       from '../module/roles/entities/role.entity';
-import { Issue }         from '../module/issues/entities/issue.entity';
-import { IssueComment }  from '../module/issues/entities/issue-comment.entity';
-import { Payment }       from '../module/payments/entities/payment.entity';
+import { AuthModule }                    from '../module/auth/auth.module';
+import { DashboardModule }               from '../module/dashboard/dashboard.module';
+import { JoinRequestsModule }            from '../module/join-requests/join-requests.module';
+import { OrganisationsModule }           from '../module/organisations/organisations.module';
+import { ProfileModule }                 from '../module/profile/profile.module';
+import { SubscriptionsModule }           from '../module/subscriptions/subscriptions.module';
+import { CustomersModule }               from '../module/customers/customers.module';
+import { EmployeesModule }               from '../module/employees/employees.module';
+import { RolesModule }                   from '../module/roles/roles.module';
+import { IssuesModule }                  from '../module/issues/issues.module';
+import { PaymentsModule }                from '../module/payments/payments.module';
+import { CustomerSubscriptionsModule }   from '../module/customer-subscriptions/customer-subscriptions.module';
+import { User }                 from '../module/auth/entities/user.entity';
+import { Invitation }           from '../module/auth/entities/invitation.entity';
+import { JoinRequest }          from '../module/join-requests/entities/join-request.entity';
+import { Product }              from '../module/subscriptions/entities/product.entity';
+import { Service }              from '../module/subscriptions/entities/service.entity';
+import { OrgRole }              from '../module/roles/entities/role.entity';
+import { Issue }                from '../module/issues/entities/issue.entity';
+import { IssueComment }         from '../module/issues/entities/issue-comment.entity';
+import { Payment }              from '../module/payments/entities/payment.entity';
+import { CustomerSubscription } from '../module/customer-subscriptions/entities/customer-subscription.entity';
 
 @Module({
   imports: [
@@ -32,7 +34,7 @@ import { Payment }       from '../module/payments/entities/payment.entity';
       username:    process.env.DB_USER     || 'postgres',
       password:    process.env.DB_PASSWORD || '',
       database:    process.env.DB_NAME     || 'servify',
-      entities:    [User, Invitation, JoinRequest, Product, Service, OrgRole, Issue, IssueComment, Payment],
+      entities:    [User, Invitation, JoinRequest, Product, Service, OrgRole, Issue, IssueComment, Payment, CustomerSubscription],
       synchronize: true,
       logging:     false,
     }),
@@ -47,6 +49,7 @@ import { Payment }       from '../module/payments/entities/payment.entity';
     RolesModule,
     IssuesModule,
     PaymentsModule,
+    CustomerSubscriptionsModule,
   ],
 })
 export class AppModule {}
