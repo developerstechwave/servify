@@ -143,6 +143,7 @@ export default function Sidebar({ navItems }: SidebarProps) {
             <button
               className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold transition-colors"
               style={{ background: 'rgba(255,255,255,0.15)', color: 'white' }}
+              onClick={() => window.location.href = 'mailto:support@servify.com?subject=Support Request&body=Hello Servify Support Team,%0A%0AI need help with:%0A%0A'}
             >
               <svg width="16" height="16" fill="none" viewBox="0 0 24 24"
                 stroke="currentColor" strokeWidth={2}>
