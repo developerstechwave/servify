@@ -28,7 +28,18 @@ export class CustomersController {
     return this.service.getOne(id, req.user.organisationId);
   }
 
+  @Get(':id/subscriptions')
+  getSubscriptions(@Req() req: any, @Param('id') id: string) {
+    return this.service.getCustomerSubscriptions(id, req.user.organisationId);
+  }
+
+  @Get(':id/issues')
+  getIssues(@Req() req: any, @Param('id') id: string) {
+    return this.service.getCustomerIssues(id, req.user.organisationId);
+  }
+
   @Post('invite')
+  @Roles(UserRole.ADMIN)
   invite(
     @Req() req: any,
     @Body() body: { name: string; email: string; phone?: string },
@@ -42,11 +53,13 @@ export class CustomersController {
   }
 
   @Post(':id/reinvite')
+  @Roles(UserRole.ADMIN)
   reinvite(@Req() req: any, @Param('id') id: string) {
     return this.service.reinviteCustomer(id, req.user.organisationId);
   }
 
   @Delete(':id')
+  @Roles(UserRole.ADMIN)
   remove(@Req() req: any, @Param('id') id: string) {
     return this.service.removeCustomer(id, req.user.organisationId);
   }

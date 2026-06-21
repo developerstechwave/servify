@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User, UserRole } from '../auth/entities/user.entity';
 import { Issue, IssueStatus } from '../issues/entities/issue.entity';
+import { Payment, PaymentStatus } from '../payments/entities/payment.entity';
 
 @Injectable()
 export class DashboardService {
@@ -11,6 +12,8 @@ export class DashboardService {
     private userRepo: Repository<User>,
     @InjectRepository(Issue)
     private issueRepo: Repository<Issue>,
+    @InjectRepository(Payment)
+    private paymentRepo: Repository<Payment>,
   ) {}
 
   async getSuperAdminStats() {
@@ -37,6 +40,13 @@ export class DashboardService {
       this.userRepo.count({ where: { role: UserRole.EMPLOYEE, organisationId } }),
       this.issueRepo.count({ where: { organisationId, status: IssueStatus.PENDING } }),
     ]);
+
+    // Real revenue data from payments
+    const payments = await this.paymentRepo.find({ where: { organisationId } });
+    const revenueAnalytics = this.buildRevenueAnalytics(payments);
+    const topLocations     = this.generateTopLocations();
+    const customerActivity = this.generateMonthlyBarData();
+
     return {
       stats: {
         verifiedCustomers: { value: verifiedCustomers, change: +12.34 },
@@ -44,9 +54,9 @@ export class DashboardService {
         openTickets:       { value: openTickets,       change: +12.34 },
         subAdmins:         { value: subAdmins,         change: +12.34 },
       },
-      revenueAnalytics: this.generateRevenueData(),
-      customerActivity: this.generateMonthlyBarData(),
-      topLocations:     this.generateTopLocations(),
+      revenueAnalytics,
+      customerActivity,
+      topLocations,
     };
   }
 
@@ -66,10 +76,10 @@ export class DashboardService {
 
     return {
       stats: {
-        total:      { value: total,      label: 'Total Assigned'  },
-        pending:    { value: pending,    label: 'Open Tickets'    },
-        inProgress: { value: inProgress, label: 'In Progress'     },
-        resolved:   { value: resolved,   label: 'Resolved'        },
+        total:      { value: total,      label: 'Total Assigned' },
+        pending:    { value: pending,    label: 'Open Tickets'   },
+        inProgress: { value: inProgress, label: 'In Progress'    },
+        resolved:   { value: resolved,   label: 'Resolved'       },
       },
       recentTickets: recentTickets.map((i) => ({
         id:           i.id,
@@ -82,19 +92,28 @@ export class DashboardService {
     };
   }
 
+  private buildRevenueAnalytics(payments: Payment[]) {
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return months.map((month, idx) => {
+      const monthPayments = payments.filter((p) => {
+        const d = new Date(p.createdAt);
+        return d.getMonth() === idx;
+      });
+      return {
+        month,
+        success: monthPayments.filter((p) => p.status === PaymentStatus.PAID)
+          .reduce((sum, p) => sum + Number(p.amount), 0),
+        pending: monthPayments.filter((p) => p.status === PaymentStatus.PENDING)
+          .reduce((sum, p) => sum + Number(p.amount), 0),
+        failed: monthPayments.filter((p) => p.status === PaymentStatus.FAILED)
+          .reduce((sum, p) => sum + Number(p.amount), 0),
+      };
+    });
+  }
+
   private generateMonthlyData() {
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     return months.map((month) => ({ month, value: Math.floor(Math.random() * 9000) + 1000 }));
-  }
-
-  private generateRevenueData() {
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    return months.map((month) => ({
-      month,
-      success: Math.floor(Math.random() * 8000) + 2000,
-      pending: Math.floor(Math.random() * 6000) + 1000,
-      failed:  Math.floor(Math.random() * 3000) + 500,
-    }));
   }
 
   private generateMonthlyBarData() {

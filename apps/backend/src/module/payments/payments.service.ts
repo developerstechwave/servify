@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Payment, PaymentStatus } from './entities/payment.entity';
 import { User } from '../auth/entities/user.entity';
+import { CustomerSubscription, SubscriptionStatus } from '../customer-subscriptions/entities/customer-subscription.entity';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 
 @Injectable()
@@ -12,9 +13,10 @@ export class PaymentsService {
     private paymentRepo: Repository<Payment>,
     @InjectRepository(User)
     private userRepo: Repository<User>,
+    @InjectRepository(CustomerSubscription)
+    private subRepo: Repository<CustomerSubscription>,
   ) {}
 
-  // Customer creates a payment (subscribes to service)
   async createPayment(customerId: string, organisationId: string, dto: CreatePaymentDto) {
     const customer = await this.userRepo.findOne({ where: { id: customerId } });
     if (!customer) throw new NotFoundException('Customer not found');
@@ -29,7 +31,6 @@ export class PaymentsService {
     return this.paymentRepo.save(payment);
   }
 
-  // Admin gets all payments for their org
   async getAll(organisationId: string, status?: PaymentStatus, search?: string) {
     let payments = await this.paymentRepo.find({
       where:  { organisationId },
@@ -60,7 +61,6 @@ export class PaymentsService {
     }));
   }
 
-  // Customer gets their own payments
   async getMyPayments(customerId: string) {
     return this.paymentRepo.find({
       where: { customerId },
@@ -68,19 +68,47 @@ export class PaymentsService {
     });
   }
 
-  // Admin updates payment status
   async updateStatus(id: string, organisationId: string, status: PaymentStatus) {
     const payment = await this.paymentRepo.findOne({ where: { id, organisationId } });
     if (!payment) throw new NotFoundException('Payment not found');
+
     payment.status = status;
-    return this.paymentRepo.save(payment);
+    await this.paymentRepo.save(payment);
+
+    // Sync subscription status
+    if (status === PaymentStatus.PAID) {
+      const sub = await this.subRepo.findOne({
+        where: {
+          customerId: payment.customerId,
+          serviceId:  payment.serviceId,
+        },
+      });
+      if (sub) {
+        sub.status = SubscriptionStatus.CURRENT;
+        await this.subRepo.save(sub);
+      }
+    }
+
+    if (status === PaymentStatus.FAILED) {
+      const sub = await this.subRepo.findOne({
+        where: {
+          customerId: payment.customerId,
+          serviceId:  payment.serviceId,
+        },
+      });
+      if (sub) {
+        sub.status = SubscriptionStatus.EXPIRED;
+        await this.subRepo.save(sub);
+      }
+    }
+
+    return { message: 'Payment status updated' };
   }
 
-  // Dashboard stats
   async getStats(organisationId: string) {
     const payments = await this.paymentRepo.find({ where: { organisationId } });
-    const total  = payments.reduce((sum, p) => sum + Number(p.amount), 0);
-    const paid   = payments.filter((p) => p.status === PaymentStatus.PAID).reduce((sum, p) => sum + Number(p.amount), 0);
+    const total   = payments.reduce((sum, p) => sum + Number(p.amount), 0);
+    const paid    = payments.filter((p) => p.status === PaymentStatus.PAID).reduce((sum, p) => sum + Number(p.amount), 0);
     const pending = payments.filter((p) => p.status === PaymentStatus.PENDING).length;
     const failed  = payments.filter((p) => p.status === PaymentStatus.FAILED).length;
     return { total, paid, pending, failed, count: payments.length };

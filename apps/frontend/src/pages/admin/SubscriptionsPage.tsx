@@ -296,7 +296,7 @@ export default function SubscriptionsPage() {
           className="rounded-xl font-semibold"
           style={{ background: 'rgba(101,16,127,1)', border: 'none' }}
         >
-          {activeTab === 'products' ? 'Add New Product' : 'Add New Service'}
+          {activeTab === 'products' ? 'Add New Category' : 'Add New Product'}
         </Button>
       </div>
 
@@ -307,8 +307,8 @@ export default function SubscriptionsPage() {
             activeKey={activeTab}
             onChange={setActiveTab}
             items={[
-              { key: 'products', label: 'Products' },
-              { key: 'services', label: 'Services' },
+              { key: 'products', label: 'Categories' },
+              { key: 'services', label: 'Products' },
             ]}
           />
         </div>
@@ -351,7 +351,7 @@ export default function SubscriptionsPage() {
         footer={null}
         centered
         width={560}
-        title={<span className="font-bold text-text-main">{editProduct ? 'Edit Product' : 'Add New Product'}</span>}
+        title={<span className="font-bold text-text-main">{editProduct ? 'Edit Product' : 'Add New Category'}</span>}
       >
         <Form form={productForm} layout="vertical" requiredMark={false} onFinish={handleProductSubmit} className="mt-4">
           <div className="grid grid-cols-2 gap-4">
@@ -398,7 +398,7 @@ export default function SubscriptionsPage() {
         footer={null}
         centered
         width={560}
-        title={<span className="font-bold text-text-main">{editService ? 'Edit Service' : 'Add New Service'}</span>}
+        title={<span className="font-bold text-text-main">{editService ? 'Edit Service' : 'Add New Product'}</span>}
       >
         <Form form={serviceForm} layout="vertical" requiredMark={false} onFinish={handleServiceSubmit} className="mt-4">
           <div className="grid grid-cols-2 gap-4">

@@ -214,7 +214,7 @@ export default function CustomerDashboard() {
     { title: 'Topic', dataIndex: 'topic', key: 'topic',
       sorter: true,
       render: (t: string) => <span className="font-medium text-text-main">{t}</span> },
-    { title: 'Product', dataIndex: 'serviceName', key: 'serviceName',
+    { title: 'Product', dataIndex: 'productName', key: 'productName',
       render: (t: string) => <span className="text-text-muted">{t || '—'}</span> },
     { title: 'Description', dataIndex: 'description', key: 'description',
       render: (t: string) => <span className="text-text-muted">{t ? t.slice(0, 15) + '...' : '—'}</span> },
