@@ -40,6 +40,20 @@ export class SubscriptionsService {
     }));
   }
 
+  async getAllProducts(organisationId: string) {
+    return this.productRepo.find({
+      where:  { organisationId },
+      select: { id: true, name: true },
+    });
+  }
+
+  async getServicesByProduct(organisationId: string, productId: string) {
+    return this.serviceRepo.find({
+      where: { organisationId, productId },
+      select: { id: true, name: true, price: true, vat: true, expiryDate: true },
+    });
+  }
+
   async createProduct(organisationId: string, createdBy: string, dto: CreateProductDto) {
     const product = this.productRepo.create({ ...dto, organisationId, createdBy });
     return this.productRepo.save(product);
@@ -104,12 +118,5 @@ export class SubscriptionsService {
     if (!service) throw new NotFoundException('Service not found');
     await this.serviceRepo.remove(service);
     return { message: 'Service deleted' };
-  }
-
-  async getAllProducts(organisationId: string) {
-    return this.productRepo.find({
-      where: { organisationId },
-      select: { id: true, name: true },
-    });
   }
 }

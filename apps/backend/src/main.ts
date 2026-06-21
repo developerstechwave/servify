@@ -15,6 +15,9 @@ async function bootstrap() {
       whitelist:            true,
       forbidNonWhitelisted: true,
       transform:            true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
     }),
   );
 
@@ -23,7 +26,6 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // Serve uploaded files statically
   app.use('/uploads', express.static(join(process.cwd(), 'apps/backend/uploads')));
 
   app.setGlobalPrefix('api');

@@ -86,8 +86,8 @@ export default function CustomerIssuesPage() {
   };
 
   const loadServices = async (productId: string) => {
-    const all = await subscriptionsService.getServices();
-    setServices(all.filter((s: any) => s.productId === productId));
+    const all = await subscriptionsService.getServicesByProduct(productId);
+    setServices(all);
   };
 
   const handleSendReport = async (values: any) => {

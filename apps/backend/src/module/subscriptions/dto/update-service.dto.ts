@@ -1,4 +1,5 @@
 import { IsString, IsNumber, IsOptional, IsEnum, IsDateString } from 'class-validator';
+import { Type } from 'class-transformer';
 import { ServiceStatus } from '../entities/service.entity';
 
 export class UpdateServiceDto {
@@ -7,6 +8,7 @@ export class UpdateServiceDto {
   name?: string;
 
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   price?: number;
 

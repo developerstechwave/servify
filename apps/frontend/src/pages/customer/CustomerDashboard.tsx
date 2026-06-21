@@ -105,10 +105,8 @@ export default function CustomerDashboard() {
   };
 
   const loadServices = async (productId: string) => {
-    try {
-      const all = await subscriptionsService.getServices();
-      setServices(all.filter((s: any) => s.productId === productId));
-    } catch {}
+    const all = await subscriptionsService.getServicesByProduct(productId);
+    setServices(all);
   };
 
   const handleProductChange = (productId: string) => {

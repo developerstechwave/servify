@@ -1,10 +1,12 @@
-import { IsString, IsNumber, IsOptional, IsEnum, IsUUID, IsDateString } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsEnum, IsDateString } from 'class-validator';
+import { Type } from 'class-transformer';
 import { ServiceStatus } from '../entities/service.entity';
 
 export class CreateServiceDto {
   @IsString()
   name: string;
 
+  @Type(() => Number)
   @IsNumber()
   price: number;
 
@@ -24,6 +26,6 @@ export class CreateServiceDto {
   @IsDateString()
   expiryDate?: string;
 
-  @IsUUID()
+  @IsString()
   productId: string;
 }

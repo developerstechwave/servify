@@ -1,175 +1,166 @@
 import { useEffect, useState, useCallback } from 'react';
-import {
-  Table, Input, Button, Dropdown, Modal, message, Checkbox,
-} from 'antd';
+import { Table, Input, Button, Dropdown, Modal, Form, message } from 'antd';
 import type { MenuProps } from 'antd';
 import { SearchOutlined, PlusOutlined } from '@ant-design/icons';
 import { organisationsService } from '../../services/organisations.service';
-import AddOrganisationModal from '../../components/organisations/AddOrganisationModal';
+import EmptyState from '../../components/ui/EmptyState';
 
 interface Organisation {
-  organisationId:  string;
-  name:            string;
-  email:           string;
-  isActive:        boolean;
-  createdAt:       string;
-  products:        number;
-  services:        number;
-  customers:       number;
-  employees:       number;
-  issuesPending:   number;
-  issuesResolved:  number;
+  id:             string;
+  organisationId: string | null;
+  name:           string;
+  email:          string;
+  isActive:       boolean;
+  verified:       boolean;
+  createdAt:      string;
+  customerCount:  number;
+  employeeCount:  number;
 }
 
-const StatusTag = ({ isActive }: { isActive: boolean }) => (
-  <span
-    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold"
-    style={{
-      background: isActive ? 'rgba(34,197,94,0.1)' : 'rgba(156,163,175,0.15)',
-      color:      isActive ? 'rgba(22,163,74,1)'   : 'rgba(107,114,128,1)',
-    }}
-  >
-    <span
-      className="w-1.5 h-1.5 rounded-full"
-      style={{ background: isActive ? 'rgba(22,163,74,1)' : 'rgba(107,114,128,1)' }}
-    />
-    {isActive ? 'Verified' : 'Deactivated'}
-  </span>
-);
+const StatusTag = ({ org }: { org: Organisation }) => {
+  if (!org.verified) {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full text-gray-500 bg-gray-100">
+        <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+        Not Verified
+      </span>
+    );
+  }
+  return (
+    <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full ${
+      org.isActive ? 'text-green-600 bg-green-50' : 'text-red-500 bg-red-50'
+    }`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${org.isActive ? 'bg-green-500' : 'bg-red-500'}`} />
+      {org.isActive ? 'Active' : 'Inactive'}
+    </span>
+  );
+};
 
 export default function OrganisationsPage() {
-  const [data, setData]             = useState<Organisation[]>([]);
-  const [loading, setLoading]       = useState(true);
-  const [search, setSearch]         = useState('');
-  const [statusFilter, setStatus]   = useState<string | undefined>();
-  const [deleteTarget, setDeleteTarget]     = useState<Organisation | null>(null);
-  const [actionLoading, setActionLoading]   = useState(false);
-  const [addModalOpen, setAddModalOpen]     = useState(false);
+  const [data, setData]         = useState<Organisation[]>([]);
+  const [loading, setLoading]   = useState(true);
+  const [search, setSearch]     = useState('');
+  const [addModal, setAddModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Organisation | null>(null);
+  const [saving, setSaving]     = useState(false);
+  const [form]                  = Form.useForm();
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await organisationsService.getAll(search, statusFilter);
+      const res = await organisationsService.getAll(search);
       setData(res);
     } catch {
       message.error('Failed to load organisations');
     } finally {
       setLoading(false);
     }
-  }, [search, statusFilter]);
+  }, [search]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const handleActivate = async (org: Organisation) => {
+  const handleInvite = async (values: any) => {
     try {
-      setActionLoading(true);
-      await organisationsService.activate(org.organisationId);
-      message.success(`${org.name} activated`);
+      setSaving(true);
+      await organisationsService.invite(values.email, values.name);
+      message.success('Invitation sent');
+      setAddModal(false);
+      form.resetFields();
       fetchData();
-    } catch { message.error('Failed to activate'); }
-    finally  { setActionLoading(false); }
-  };
-
-  const handleDeactivate = async (org: Organisation) => {
-    try {
-      setActionLoading(true);
-      await organisationsService.deactivate(org.organisationId);
-      message.success(`${org.name} deactivated`);
-      fetchData();
-    } catch { message.error('Failed to deactivate'); }
-    finally  { setActionLoading(false); }
+    } catch (err: any) {
+      message.error(err?.response?.data?.message || 'Failed to send invitation');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDelete = async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget?.organisationId) return;
     try {
-      setActionLoading(true);
+      setSaving(true);
       await organisationsService.delete(deleteTarget.organisationId);
-      message.success(`${deleteTarget.name} deleted`);
+      message.success('Organisation deleted');
       setDeleteTarget(null);
       fetchData();
-    } catch { message.error('Failed to delete'); }
-    finally  { setActionLoading(false); }
+    } catch {
+      message.error('Failed to delete');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const getRowMenu = (org: Organisation): MenuProps => ({
+  const getRowMenu = (record: Organisation): MenuProps => ({
     items: [
+      ...(record.verified && record.organisationId ? [
+        {
+          key:     record.isActive ? 'deactivate' : 'activate',
+          label:   record.isActive ? 'Deactivate' : 'Activate',
+          onClick: async () => {
+            try {
+              if (record.isActive) {
+                await organisationsService.deactivate(record.organisationId!);
+                message.success('Organisation deactivated');
+              } else {
+                await organisationsService.activate(record.organisationId!);
+                message.success('Organisation activated');
+              }
+              fetchData();
+            } catch {
+              message.error('Failed to update status');
+            }
+          },
+        },
+      ] : []),
       {
         key:     'delete',
         label:   'Delete',
         danger:  true,
-        onClick: () => setDeleteTarget(org),
-      },
-      {
-        key:     'toggle',
-        label:   org.isActive ? 'Deactivate' : 'Activate',
-        onClick: () => org.isActive ? handleDeactivate(org) : handleActivate(org),
+        onClick: () => setDeleteTarget(record),
+        disabled: !record.organisationId,
       },
     ],
   });
 
-  const filterItems: MenuProps['items'] = [
-    { key: 'all',         label: 'All',        onClick: () => setStatus(undefined) },
-    { key: 'active',      label: 'Active',      onClick: () => setStatus('active') },
-    { key: 'deactivated', label: 'Deactivated', onClick: () => setStatus('deactivated') },
-  ];
-
   const columns = [
     {
-      title:  '',
-      key:    'checkbox',
-      width:  40,
-      render: (_: any, record: Organisation) => <Checkbox disabled={!record.isActive} />,
-    },
-    {
-      title:     'Company Name',
+      title:     'Organisation',
       dataIndex: 'name',
       key:       'name',
       sorter:    (a: Organisation, b: Organisation) => a.name.localeCompare(b.name),
-      render:    (text: string, record: Organisation) => (
-        <span className={`font-medium ${!record.isActive ? 'text-text-muted' : 'text-text-main'}`}>
-          {text.length > 14 ? text.slice(0, 14) + '...' : text}
-        </span>
-      ),
+      render:    (t: string) => <span className="font-medium text-text-main">{t}</span>,
     },
     {
       title:     'Email',
       dataIndex: 'email',
       key:       'email',
-      render:    (text: string, record: Organisation) => (
-        <span className={!record.isActive ? 'text-text-muted' : ''}>
-          {text.length > 16 ? text.slice(0, 16) + '...' : text}
-        </span>
-      ),
+      render:    (t: string) => <span className="text-text-muted">{t}</span>,
     },
-    { title: 'No. of Products',        dataIndex: 'products',       key: 'products',
-      render: (v: number, r: Organisation) => <span className={!r.isActive ? 'text-text-muted' : ''}>{v}</span> },
-    { title: 'No. of Services',        dataIndex: 'services',       key: 'services',
-      render: (v: number, r: Organisation) => <span className={!r.isActive ? 'text-text-muted' : ''}>{v}</span> },
-    { title: 'No. of Customers',       dataIndex: 'customers',      key: 'customers',
-      render: (v: number, r: Organisation) => <span className={!r.isActive ? 'text-text-muted' : ''}>{v}</span> },
-    { title: 'No. of Employees',       dataIndex: 'employees',      key: 'employees',
-      render: (v: number, r: Organisation) => <span className={!r.isActive ? 'text-text-muted' : ''}>{v}</span> },
-    { title: 'No. of Issues Pending',  dataIndex: 'issuesPending',  key: 'issuesPending',
-      render: (v: number, r: Organisation) => <span className={!r.isActive ? 'text-text-muted' : ''}>{v}</span> },
-    { title: 'No. of Issues Resolved', dataIndex: 'issuesResolved', key: 'issuesResolved',
-      render: (v: number, r: Organisation) => <span className={!r.isActive ? 'text-text-muted' : ''}>{v}</span> },
+    {
+      title:     'Customers',
+      dataIndex: 'customerCount',
+      key:       'customerCount',
+      render:    (v: number) => <span className="text-text-muted">{v}</span>,
+    },
+    {
+      title:     'Employees',
+      dataIndex: 'employeeCount',
+      key:       'employeeCount',
+      render:    (v: number) => <span className="text-text-muted">{v}</span>,
+    },
     {
       title:     'Date Added',
       dataIndex: 'createdAt',
       key:       'createdAt',
-      render:    (date: string, r: Organisation) => (
-        <span className={!r.isActive ? 'text-text-muted' : ''}>
-          {new Date(date).toLocaleDateString('en-GB', {
-            day: '2-digit', month: '2-digit', year: '2-digit',
-          })}
+      render:    (d: string) => (
+        <span className="text-text-muted">
+          {new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })}
         </span>
       ),
     },
     {
       title:  'Status',
       key:    'status',
-      render: (_: any, record: Organisation) => <StatusTag isActive={record.isActive} />,
+      render: (_: any, record: Organisation) => <StatusTag org={record} />,
     },
     {
       title:  '',
@@ -177,11 +168,9 @@ export default function OrganisationsPage() {
       width:  40,
       render: (_: any, record: Organisation) => (
         <Dropdown menu={getRowMenu(record)} trigger={['click']} placement="bottomRight">
-          <button className="text-text-muted hover:text-text-main p-1 rounded transition-colors">
+          <button className="text-text-muted hover:text-text-main p-1">
             <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-              <circle cx="12" cy="5"  r="1.5" />
-              <circle cx="12" cy="12" r="1.5" />
-              <circle cx="12" cy="19" r="1.5" />
+              <circle cx="12" cy="5" r="1.5" /><circle cx="12" cy="12" r="1.5" /><circle cx="12" cy="19" r="1.5" />
             </svg>
           </button>
         </Dropdown>
@@ -191,99 +180,87 @@ export default function OrganisationsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Top bar */}
       <div className="flex items-center justify-between gap-4">
         <Input
           prefix={<SearchOutlined className="text-text-muted" />}
-          placeholder="Search by company name, service, ..."
+          placeholder="Search organisations..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="rounded-xl max-w-sm"
           size="large"
+          allowClear
         />
-        <div className="flex items-center gap-3">
-          <Dropdown menu={{ items: filterItems }} trigger={['click']}>
-            <Button size="large" className="rounded-xl border-primary text-primary font-medium">
-              Select Filter
-              <svg width="14" height="14" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor" strokeWidth={2} className="ml-1">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
-            </Button>
-          </Dropdown>
-          <Button
-            type="primary"
-            size="large"
-            icon={<PlusOutlined />}
-            onClick={() => setAddModalOpen(true)}
-            className="rounded-xl font-semibold"
-            style={{ background: 'rgba(101,16,127,1)', border: 'none' }}
-          >
-            Add New Organization
-          </Button>
-        </div>
+        <Button
+          type="primary" size="large" icon={<PlusOutlined />}
+          onClick={() => setAddModal(true)}
+          className="rounded-xl font-semibold"
+          style={{ background: 'rgba(101,16,127,1)', border: 'none' }}
+        >
+          Add New Organisation
+        </Button>
       </div>
 
-      {/* Table */}
       <div>
-        <h1 className="text-2xl font-bold text-text-main mb-4">Organizations</h1>
+        <h1 className="text-2xl font-bold text-text-main mb-4">Organisations</h1>
         <div className="bg-white rounded-2xl border border-border overflow-hidden">
           <Table
             columns={columns}
             dataSource={data}
-            rowKey="organisationId"
+            rowKey="id"
             loading={loading}
             pagination={{ pageSize: 9, showSizeChanger: false, style: { padding: '16px 24px' } }}
-            scroll={{ x: 'max-content' }}
+            locale={{ emptyText: <EmptyState type={search ? 'no-results' : 'no-data'} /> }}
             style={{ border: 'none' }}
           />
         </div>
       </div>
 
-      {/* Add Organisation Modal */}
-      <AddOrganisationModal
-        open={addModalOpen}
-        onClose={() => setAddModalOpen(false)}
-        onSuccess={() => { setAddModalOpen(false); fetchData(); }}
-      />
+      {/* Invite modal */}
+      <Modal
+        open={addModal}
+        onCancel={() => { setAddModal(false); form.resetFields(); }}
+        footer={null} centered width={440}
+        title={<span className="font-bold text-text-main">Add New Organisation</span>}
+      >
+        <Form form={form} layout="vertical" requiredMark={false} onFinish={handleInvite} className="mt-4">
+          <Form.Item
+            label={<span className="text-sm font-medium text-text-main">Organisation Name</span>}
+            name="name" rules={[{ required: true, message: 'Name is required' }]}>
+            <Input size="large" placeholder="Enter organisation name" className="rounded-xl" />
+          </Form.Item>
+          <Form.Item
+            label={<span className="text-sm font-medium text-text-main">Email</span>}
+            name="email" rules={[{ required: true }, { type: 'email', message: 'Enter valid email' }]}>
+            <Input size="large" placeholder="Enter email address" className="rounded-xl" />
+          </Form.Item>
+          <div className="flex gap-3 mt-2">
+            <Button size="large" onClick={() => { setAddModal(false); form.resetFields(); }}
+              className="flex-1 h-11 rounded-xl">Cancel</Button>
+            <Button type="primary" htmlType="submit" size="large" loading={saving}
+              className="flex-1 h-11 rounded-xl font-semibold"
+              style={{ background: 'rgba(101,16,127,1)', border: 'none' }}>
+              Send Invitation
+            </Button>
+          </div>
+        </Form>
+      </Modal>
 
-      {/* Delete confirmation modal */}
+      {/* Delete modal */}
       <Modal
         open={!!deleteTarget}
         onCancel={() => setDeleteTarget(null)}
-        footer={null}
-        centered
-        width={400}
+        footer={null} centered width={400}
         title={<span className="font-bold text-text-main">Delete Organisation</span>}
       >
-        <div className="py-4 px-2">
-          <div
-            className="rounded-xl p-4 mb-6 text-center"
-            style={{ border: '1px dashed rgba(220,38,38,0.3)', background: 'rgba(220,38,38,0.03)' }}
-          >
-            <p className="text-text-main font-medium">
-              Are you sure you want to delete <strong>{deleteTarget?.name}</strong>?
-              This action cannot be undone.
-            </p>
-          </div>
+        <div className="py-4">
+          <p className="text-center text-text-main mb-6">
+            Are you sure you want to delete <strong>{deleteTarget?.name}</strong>?
+          </p>
           <div className="flex gap-3">
-            <Button
-              size="large"
-              onClick={() => setDeleteTarget(null)}
-              className="flex-1 h-11 rounded-xl font-semibold"
-            >
-              Cancel
-            </Button>
-            <Button
-              danger
-              type="primary"
-              size="large"
-              loading={actionLoading}
-              onClick={handleDelete}
-              className="flex-1 h-11 rounded-xl font-semibold"
-            >
-              Delete
-            </Button>
+            <Button size="large" onClick={() => setDeleteTarget(null)}
+              className="flex-1 h-11 rounded-xl">Cancel</Button>
+            <Button danger type="primary" size="large" loading={saving} onClick={handleDelete}
+              className="flex-1 h-11 rounded-xl">Delete</Button>
           </div>
         </div>
       </Modal>
