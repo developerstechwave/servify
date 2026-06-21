@@ -1,24 +1,60 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike } from 'typeorm';
+import { Repository } from 'typeorm';
 import { CustomerSubscription, SubscriptionStatus } from './entities/customer-subscription.entity';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
+import { Payment, PaymentStatus } from '../payments/entities/payment.entity';
+import { Service } from '../subscriptions/entities/service.entity';
+import { User } from '../auth/entities/user.entity';
 
 @Injectable()
 export class CustomerSubscriptionsService {
   constructor(
     @InjectRepository(CustomerSubscription)
     private repo: Repository<CustomerSubscription>,
+    @InjectRepository(Payment)
+    private paymentRepo: Repository<Payment>,
+    @InjectRepository(Service)
+    private serviceRepo: Repository<Service>,
+    @InjectRepository(User)
+    private userRepo: Repository<User>,
   ) {}
 
   async create(customerId: string, organisationId: string, dto: CreateSubscriptionDto) {
+    // Create subscription
     const sub = this.repo.create({
       ...dto,
       customerId,
       organisationId,
       status: dto.status ?? SubscriptionStatus.PENDING,
     });
-    return this.repo.save(sub);
+    const saved = await this.repo.save(sub);
+
+    // Auto-create payment record
+    try {
+      const customer = await this.userRepo.findOne({ where: { id: customerId } });
+      const service  = await this.serviceRepo.findOne({ where: { id: dto.serviceId } });
+
+      if (customer && service) {
+        const payment = this.paymentRepo.create({
+          customerId,
+          organisationId,
+          customerName: `${customer.firstName} ${customer.lastName}`,
+          serviceId:    dto.serviceId,
+          serviceName:  dto.serviceName,
+          productName:  dto.productName,
+          amount:       service.price,
+          vat:          service.vat,
+          status:       PaymentStatus.PENDING,
+          expiryDate:   dto.expiryDate ? new Date(dto.expiryDate) : service.expiryDate,
+        });
+        await this.paymentRepo.save(payment);
+      }
+    } catch (e) {
+      console.error('Failed to create payment record:', e);
+    }
+
+    return saved;
   }
 
   async getAll(customerId: string, search?: string, status?: string) {

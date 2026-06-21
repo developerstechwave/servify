@@ -47,7 +47,9 @@ export class IssuesController {
     @Query('status') status?: IssueStatus,
     @Query('search') search?: string,
   ) {
-    return this.service.getAssignedIssues(req.user.id, req.user.organisationId, status, search);
+    return this.service.getAssignedIssues(
+      req.user.id, req.user.organisationId, status, search,
+    );
   }
 
   @Get('employees')
@@ -66,14 +68,16 @@ export class IssuesController {
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.EMPLOYEE)
   update(@Req() req: any, @Param('id') id: string, @Body() dto: UpdateIssueDto) {
-    return this.service.updateIssue(id, req.user.organisationId, dto);
+    const actorName = `${req.user.firstName} ${req.user.lastName}`;
+    return this.service.updateIssue(id, req.user.organisationId, dto, actorName);
   }
 
   @Patch(':id/assign')
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.EMPLOYEE)
   assign(@Req() req: any, @Param('id') id: string, @Body() body: { employeeId: string }) {
-    return this.service.assignTicket(id, req.user.organisationId, body.employeeId);
+    const actorName = `${req.user.firstName} ${req.user.lastName}`;
+    return this.service.assignTicket(id, req.user.organisationId, body.employeeId, actorName);
   }
 
   @Post(':id/comments')

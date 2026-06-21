@@ -1,7 +1,6 @@
 import api from './api';
 
 export const subscriptionsService = {
-  // Products
   async getProducts(search?: string) {
     const params = search ? `?search=${search}` : '';
     const { data } = await api.get(`/subscriptions/products${params}`);
@@ -10,6 +9,17 @@ export const subscriptionsService = {
 
   async getAllProducts() {
     const { data } = await api.get('/subscriptions/products/all');
+    return data;
+  },
+
+  async getServicesByProduct(productId: string) {
+    const { data } = await api.get(`/subscriptions/services/public?productId=${productId}`);
+    return data;
+  },
+
+  async getServices(search?: string) {
+    const params = search ? `?search=${search}` : '';
+    const { data } = await api.get(`/subscriptions/services${params}`);
     return data;
   },
 
@@ -28,13 +38,6 @@ export const subscriptionsService = {
 
   async deleteProduct(id: string) {
     const { data } = await api.delete(`/subscriptions/products/${id}`);
-    return data;
-  },
-
-  // Services
-  async getServices(search?: string) {
-    const params = search ? `?search=${search}` : '';
-    const { data } = await api.get(`/subscriptions/services${params}`);
     return data;
   },
 

@@ -1,13 +1,6 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Patch,
-  Delete,
-  Param,
-  Query,
-  Body,
-  UseGuards,
+  Controller, Get, Post, Patch, Delete,
+  Body, Param, Query, UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { OrganisationsService } from './organisations.service';
@@ -22,23 +15,23 @@ export class OrganisationsController {
   constructor(private service: OrganisationsService) {}
 
   @Get()
-  getAll(@Query('search') search?: string, @Query('status') status?: string) {
-    return this.service.getAll(search, status);
+  getAll(@Query('search') search?: string) {
+    return this.service.getAll(search);
   }
 
   @Post('invite')
-  invite(@Body() body: { companyName: string; email: string; phone?: string }) {
-    return this.service.inviteOrganisation(body.companyName, body.email, body.phone);
+  invite(@Body() body: { name: string; email: string }) {
+    return this.service.inviteOrganisation(body.email, body.name);
   }
 
   @Patch(':organisationId/activate')
   activate(@Param('organisationId') organisationId: string) {
-    return this.service.setStatus(organisationId, true);
+    return this.service.activate(organisationId);
   }
 
   @Patch(':organisationId/deactivate')
   deactivate(@Param('organisationId') organisationId: string) {
-    return this.service.setStatus(organisationId, false);
+    return this.service.deactivate(organisationId);
   }
 
   @Delete(':organisationId')

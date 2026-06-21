@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage                 from '../pages/auth/LoginPage';
 import RegisterPage              from '../pages/auth/RegisterPage';
 import JoinPage                  from '../pages/auth/JoinPage';
+import NotFoundPage              from '../pages/NotFoundPage';
 import ProtectedRoute            from '../routes/ProtectedRoute';
 import DashboardLayout           from '../components/layout/DashboardLayout';
 import SuperAdminDashboard       from '../pages/super-admin/SuperAdminDashboard';
@@ -59,6 +60,7 @@ export default function App() {
                 <Route path="organisations" element={<OrganisationsPage />} />
                 <Route path="invites"       element={<InvitesPage />} />
                 <Route path="invites/:id"   element={<InviteDetailPage />} />
+                <Route path="*"             element={<NotFoundPage />} />
               </Routes>
             </DashboardLayout>
           </ProtectedRoute>
@@ -81,6 +83,7 @@ export default function App() {
                 <Route path="crm/:id"             element={<IssueDetailPage />} />
                 <Route path="issues"              element={<IssuesPage />} />
                 <Route path="payments"            element={<PaymentsPage />} />
+                <Route path="*"                   element={<NotFoundPage />} />
               </Routes>
             </DashboardLayout>
           </ProtectedRoute>
@@ -97,6 +100,7 @@ export default function App() {
                 <Route path="crm/:id"       element={<IssueDetailPage />} />
                 <Route path="customers"     element={<EmployeeCustomersPage />} />
                 <Route path="notifications" element={<ComingSoon title="Notifications" />} />
+                <Route path="*"             element={<NotFoundPage />} />
               </Routes>
             </DashboardLayout>
           </ProtectedRoute>
@@ -114,12 +118,13 @@ export default function App() {
                 <Route path="issues/:id"        element={<CustomerIssueDetailPage />} />
                 <Route path="payments"          element={<CustomerPaymentsPage />} />
                 <Route path="faqs"              element={<FAQsPage />} />
+                <Route path="*"                 element={<NotFoundPage />} />
               </Routes>
             </DashboardLayout>
           </ProtectedRoute>
         } />
 
-        <Route path="*" element={<Navigate to={LINKS.LOGIN} replace />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
   );

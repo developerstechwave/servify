@@ -6,6 +6,8 @@ import { IssueComment } from './entities/issue-comment.entity';
 import { User, UserRole } from '../auth/entities/user.entity';
 import { CreateIssueDto } from './dto/create-issue.dto';
 import { UpdateIssueDto } from './dto/update-issue.dto';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '../notifications/entities/notification.entity';
 
 @Injectable()
 export class IssuesService {
@@ -16,11 +18,13 @@ export class IssuesService {
     private commentRepo: Repository<IssueComment>,
     @InjectRepository(User)
     private userRepo: Repository<User>,
+    private notificationsService: NotificationsService,
   ) {}
 
   async createIssue(customerId: string, organisationId: string, dto: CreateIssueDto) {
     const customer = await this.userRepo.findOne({ where: { id: customerId } });
     if (!customer) throw new NotFoundException('Customer not found');
+
     const issue = this.issueRepo.create({
       ...dto,
       customerId,
@@ -28,7 +32,27 @@ export class IssuesService {
       customerName: `${customer.firstName} ${customer.lastName}`,
       status:       IssueStatus.PENDING,
     });
-    return this.issueRepo.save(issue);
+    const saved = await this.issueRepo.save(issue);
+
+    // Notify all admins
+    const admins = await this.userRepo.find({
+      where: { organisationId, role: UserRole.ADMIN },
+    });
+    for (const admin of admins) {
+      await this.notificationsService.create({
+        userId:         admin.id,
+        organisationId,
+        type:           NotificationType.ISSUE,
+        title:          'New Issue Created',
+        message:        `${customer.firstName} ${customer.lastName} created an issue`,
+        issueId:        saved.id,
+        issueTopic:     saved.topic,
+        issueStatus:    saved.status,
+        actorName:      `${customer.firstName} ${customer.lastName}`,
+      });
+    }
+
+    return saved;
   }
 
   async getAll(organisationId: string, status?: IssueStatus, search?: string) {
@@ -60,12 +84,7 @@ export class IssuesService {
     }));
   }
 
-  async getAssignedIssues(
-    employeeId: string,
-    organisationId: string,
-    status?: IssueStatus,
-    search?: string,
-  ) {
+  async getAssignedIssues(employeeId: string, organisationId: string, status?: IssueStatus, search?: string) {
     let issues = await this.issueRepo.find({
       where:     { organisationId, assigneeId: employeeId },
       relations: { comments: true },
@@ -109,38 +128,69 @@ export class IssuesService {
     return issue;
   }
 
-  async updateIssue(id: string, organisationId: string, dto: UpdateIssueDto) {
+  async updateIssue(id: string, organisationId: string, dto: UpdateIssueDto, actorName?: string) {
     const issue = await this.issueRepo.findOne({ where: { id, organisationId } });
     if (!issue) throw new NotFoundException('Issue not found');
+    const oldStatus = issue.status;
     Object.assign(issue, dto);
-    return this.issueRepo.save(issue);
+    const saved = await this.issueRepo.save(issue);
+
+    // Notify customer of status change
+    if (dto.status && dto.status !== oldStatus && actorName) {
+      await this.notificationsService.notifyStatusChange(saved, actorName);
+    }
+
+    return saved;
   }
 
-  async assignTicket(id: string, organisationId: string, employeeId: string) {
+  async assignTicket(id: string, organisationId: string, employeeId: string, actorName?: string) {
     const issue = await this.issueRepo.findOne({ where: { id, organisationId } });
     if (!issue) throw new NotFoundException('Issue not found');
+
     const employee = await this.userRepo.findOne({
       where: { id: employeeId, organisationId, role: UserRole.EMPLOYEE },
     });
     if (!employee) throw new NotFoundException('Employee not found');
+
     issue.assigneeId   = employee.id;
     issue.assigneeName = `${employee.firstName} ${employee.lastName}`;
     issue.status       = IssueStatus.IN_PROGRESS;
-    return this.issueRepo.save(issue);
+    const saved = await this.issueRepo.save(issue);
+
+    // Notify employee
+    await this.notificationsService.notifyIssueAssigned(
+      saved,
+      employee.id,
+      actorName || 'Admin',
+    );
+
+    return saved;
   }
 
   async addComment(issueId: string, authorId: string, body: string) {
     const issue = await this.issueRepo.findOne({ where: { id: issueId } });
     if (!issue) throw new NotFoundException('Issue not found');
+
     const author = await this.userRepo.findOne({ where: { id: authorId } });
     if (!author) throw new NotFoundException('Author not found');
+
     const comment = this.commentRepo.create({
       issueId,
       authorId,
       authorName: `${author.firstName} ${author.lastName}`,
       body,
     });
-    return this.commentRepo.save(comment);
+    const saved = await this.commentRepo.save(comment);
+
+    // Notify customer if commenter is not the customer
+    if (issue.customerId !== authorId) {
+      await this.notificationsService.notifyComment(
+        issue,
+        `${author.firstName} ${author.lastName}`,
+      );
+    }
+
+    return saved;
   }
 
   async getOrgEmployees(organisationId: string) {
