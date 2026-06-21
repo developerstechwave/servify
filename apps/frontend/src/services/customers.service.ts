@@ -14,6 +14,16 @@ export const customersService = {
     return data;
   },
 
+  async getSubscriptions(id: string) {
+    const { data } = await api.get(`/customers/${id}/subscriptions`);
+    return data;
+  },
+
+  async getIssues(id: string) {
+    const { data } = await api.get(`/customers/${id}/issues`);
+    return data;
+  },
+
   async invite(name: string, email: string, phone?: string) {
     const { data } = await api.post('/customers/invite', { name, email, phone });
     return data;

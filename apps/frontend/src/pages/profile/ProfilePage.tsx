@@ -142,7 +142,7 @@ export default function ProfilePage() {
     ? `${profile.firstName?.[0] ?? ''}${profile.lastName?.[0] ?? ''}`.toUpperCase()
     : '';
 
-  const roleLabel = profile?.role
+  const roleLabel = profile?.employeeRole && profile?.role === 'employee' ? profile.employeeRole + ' (Employee)' : profile?.role
     ?.split('_').map((w: string) => w[0].toUpperCase() + w.slice(1)).join(' ') + ' Profile';
 
   if (loading) return (

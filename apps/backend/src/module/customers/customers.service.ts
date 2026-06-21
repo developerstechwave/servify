@@ -4,10 +4,12 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike } from 'typeorm';
+import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { User, UserRole } from '../auth/entities/user.entity';
 import { Invitation, InvitationType, InvitationStatus } from '../auth/entities/invitation.entity';
+import { CustomerSubscription } from '../customer-subscriptions/entities/customer-subscription.entity';
+import { Issue } from '../issues/entities/issue.entity';
 import { MailService } from '../../common/mail/mail.service';
 
 @Injectable()
@@ -17,6 +19,10 @@ export class CustomersService {
     private userRepo: Repository<User>,
     @InjectRepository(Invitation)
     private invitationRepo: Repository<Invitation>,
+    @InjectRepository(CustomerSubscription)
+    private subRepo: Repository<CustomerSubscription>,
+    @InjectRepository(Issue)
+    private issueRepo: Repository<Issue>,
     private mailService: MailService,
   ) {}
 
@@ -42,16 +48,25 @@ export class CustomersService {
     if (filter === 'verified')   customers = customers.filter((c) =>  c.isActive);
     if (filter === 'unverified') customers = customers.filter((c) => !c.isActive);
 
-    return customers.map((c) => ({
-      id:        c.id,
-      name:      `${c.firstName} ${c.lastName}`,
-      email:     c.email,
-      phone:     c.phone,
-      isActive:  c.isActive,
-      createdAt: c.createdAt,
-      service:   null,
-      datePurchased: null,
-    }));
+    // Get latest subscription for each customer
+    const result = [];
+    for (const c of customers) {
+      const latestSub = await this.subRepo.findOne({
+        where: { customerId: c.id },
+        order: { createdAt: 'DESC' },
+      });
+      result.push({
+        id:            c.id,
+        name:          `${c.firstName} ${c.lastName}`,
+        email:         c.email,
+        phone:         c.phone,
+        isActive:      c.isActive,
+        createdAt:     c.createdAt,
+        service:       latestSub?.serviceName ?? null,
+        datePurchased: latestSub?.createdAt ?? null,
+      });
+    }
+    return result;
   }
 
   async getOne(id: string, organisationId: string) {
@@ -77,17 +92,46 @@ export class CustomersService {
     };
   }
 
+  async getCustomerSubscriptions(customerId: string, organisationId: string) {
+    const subs = await this.subRepo.find({
+      where: { customerId, organisationId },
+      order: { createdAt: 'DESC' },
+    });
+    return subs.map((s) => ({
+      id:           s.id,
+      product:      s.productName,
+      service:      s.serviceName,
+      description:  s.description,
+      status:       s.status,
+      datePurchased: s.createdAt,
+      expiryDate:   s.expiryDate,
+    }));
+  }
+
+  async getCustomerIssues(customerId: string, organisationId: string) {
+    const issues = await this.issueRepo.find({
+      where: { customerId, organisationId },
+      order: { createdAt: 'DESC' },
+    });
+    return issues.map((i) => ({
+      id:          i.id,
+      topic:       i.topic,
+      service:     i.serviceName,
+      description: i.description,
+      status:      i.status,
+      dateIssued:  i.createdAt,
+    }));
+  }
+
   async inviteCustomer(
     organisationId: string,
     name: string,
     email: string,
     phone?: string,
   ) {
-    // Check not already registered
     const existing = await this.userRepo.findOne({ where: { email } });
     if (existing) throw new BadRequestException('An account already exists for this email');
 
-    // Check no pending invitation
     const existingInvite = await this.invitationRepo.findOne({
       where: { email, status: InvitationStatus.PENDING, type: InvitationType.CUSTOMER },
     });
@@ -111,7 +155,7 @@ export class CustomersService {
         to:        email,
         name,
         token,
-        message:   'You have been invited to join as a customer. Use the token below to complete your registration.',
+        message:   'You have been invited to join as a customer.',
         expiresIn: '7 days',
       }),
     );
@@ -143,7 +187,7 @@ export class CustomersService {
         to:        customer.email,
         name:      `${customer.firstName} ${customer.lastName}`,
         token,
-        message:   'You have been reinvited. Use the token below to access your account.',
+        message:   'You have been reinvited.',
         expiresIn: '7 days',
       }),
     );
