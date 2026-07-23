@@ -3,6 +3,7 @@ import { Input, Dropdown, message, Spin } from 'antd';
 import type { MenuProps } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { issuesService } from '../../services/issues.service';
+import { useAuthStore } from '../../store/auth.store';
 import SLABadge from '../../components/ui/SLABadge';
 import { LINKS } from '../../lib/links';
 
@@ -132,13 +133,16 @@ const IssueCard = ({
 export default function CRMPage() {
   const navigate = useNavigate();
   const [issues, setIssues]   = useState<Issue[]>([]);
+  const { user } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [search, setSearch]   = useState('');
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await issuesService.getAll(undefined, search);
+      const res = user?.role === 'employee'
+        ? await issuesService.getAssigned(undefined, search)
+        : await issuesService.getAll(undefined, search);
       setIssues(res);
     } catch {
       message.error('Failed to load issues');
@@ -216,7 +220,7 @@ export default function CRMPage() {
                       key={issue.id}
                       issue={issue}
                       onMoveStatus={handleMoveStatus}
-                      onClick={() => navigate(`${LINKS.ADMIN_CRM}/${issue.id}`)}
+                      onClick={() => navigate(`${user?.role === 'employee' ? LINKS.EMPLOYEE_CRM : LINKS.ADMIN_CRM}/${issue.id}`)}
                     />
                   ))
                 )}
