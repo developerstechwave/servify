@@ -3,6 +3,7 @@ import { Input, Dropdown, message, Spin } from 'antd';
 import type { MenuProps } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { issuesService } from '../../services/issues.service';
+import SLABadge from '../../components/ui/SLABadge';
 import { LINKS } from '../../lib/links';
 
 interface Issue {
@@ -14,7 +15,9 @@ interface Issue {
   serviceName:  string;
   assigneeId:   string | null;
   assigneeName: string | null;
-  commentCount: number;
+  commentCount:  number;
+  slaDeadline:   string | null;
+  slaBreached:   boolean;
   createdAt:    string;
 }
 

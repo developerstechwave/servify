@@ -9,6 +9,8 @@ import { UpdateIssueDto } from './dto/update-issue.dto';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
 
+const SLA_HOURS = 24;
+
 @Injectable()
 export class IssuesService {
   constructor(
@@ -21,17 +23,55 @@ export class IssuesService {
     private notificationsService: NotificationsService,
   ) {}
 
+  // ── Auto-assign to employee with fewest open tickets ──────────────────────
+  private async autoAssign(organisationId: string): Promise<User | null> {
+    const employees = await this.userRepo.find({
+      where: { organisationId, role: UserRole.EMPLOYEE, isActive: true },
+    });
+
+    if (employees.length === 0) return null;
+
+    // Count open tickets per employee
+    const counts = await Promise.all(
+      employees.map(async (emp) => {
+        const count = await this.issueRepo.count({
+          where: [
+            { assigneeId: emp.id, status: IssueStatus.PENDING },
+            { assigneeId: emp.id, status: IssueStatus.IN_PROGRESS },
+          ],
+        });
+        return { emp, count };
+      }),
+    );
+
+    // Sort by fewest open tickets
+    counts.sort((a, b) => a.count - b.count);
+    return counts[0].emp;
+  }
+
   async createIssue(customerId: string, organisationId: string, dto: CreateIssueDto) {
     const customer = await this.userRepo.findOne({ where: { id: customerId } });
     if (!customer) throw new NotFoundException('Customer not found');
+
+    // Set SLA deadline — 24 hours from now
+    const slaDeadline = new Date();
+    slaDeadline.setHours(slaDeadline.getHours() + SLA_HOURS);
+
+    // Auto-assign to employee with fewest tickets
+    const assignee = await this.autoAssign(organisationId);
 
     const issue = this.issueRepo.create({
       ...dto,
       customerId,
       organisationId,
       customerName: `${customer.firstName} ${customer.lastName}`,
-      status:       IssueStatus.PENDING,
+      status:       assignee ? IssueStatus.IN_PROGRESS : IssueStatus.PENDING,
+      slaDeadline,
+      slaBreached:  false,
+      assigneeId:   assignee?.id ?? null,
+      assigneeName: assignee ? `${assignee.firstName} ${assignee.lastName}` : null,
     });
+
     const saved = await this.issueRepo.save(issue);
 
     // Notify all admins
@@ -49,6 +89,21 @@ export class IssuesService {
         issueTopic:     saved.topic,
         issueStatus:    saved.status,
         actorName:      `${customer.firstName} ${customer.lastName}`,
+      });
+    }
+
+    // Notify auto-assigned employee
+    if (assignee) {
+      await this.notificationsService.create({
+        userId:         assignee.id,
+        organisationId,
+        type:           NotificationType.DIRECT,
+        title:          'Ticket Auto-Assigned to You',
+        message:        `A new ticket from ${customer.firstName} ${customer.lastName} has been automatically assigned to you`,
+        issueId:        saved.id,
+        issueTopic:     saved.topic,
+        issueStatus:    saved.status,
+        actorName:      'System',
       });
     }
 
@@ -79,6 +134,8 @@ export class IssuesService {
       serviceName:  i.serviceName,
       assigneeId:   i.assigneeId,
       assigneeName: i.assigneeName,
+      slaDeadline:  i.slaDeadline,
+      slaBreached:  i.slaBreached,
       commentCount: i.comments?.length ?? 0,
       createdAt:    i.createdAt,
     }));
@@ -107,6 +164,8 @@ export class IssuesService {
       serviceName:  i.serviceName,
       assigneeId:   i.assigneeId,
       assigneeName: i.assigneeName,
+      slaDeadline:  i.slaDeadline,
+      slaBreached:  i.slaBreached,
       commentCount: i.comments?.length ?? 0,
       createdAt:    i.createdAt,
     }));
@@ -133,9 +192,14 @@ export class IssuesService {
     if (!issue) throw new NotFoundException('Issue not found');
     const oldStatus = issue.status;
     Object.assign(issue, dto);
+
+    // If resolved, clear SLA breach flag
+    if (dto.status === IssueStatus.RESOLVED || dto.status === IssueStatus.FAILED) {
+      issue.slaBreached = false;
+    }
+
     const saved = await this.issueRepo.save(issue);
 
-    // Notify customer of status change
     if (dto.status && dto.status !== oldStatus && actorName) {
       await this.notificationsService.notifyStatusChange(saved, actorName);
     }
@@ -157,13 +221,7 @@ export class IssuesService {
     issue.status       = IssueStatus.IN_PROGRESS;
     const saved = await this.issueRepo.save(issue);
 
-    // Notify employee
-    await this.notificationsService.notifyIssueAssigned(
-      saved,
-      employee.id,
-      actorName || 'Admin',
-    );
-
+    await this.notificationsService.notifyIssueAssigned(saved, employee.id, actorName || 'Admin');
     return saved;
   }
 
@@ -182,12 +240,8 @@ export class IssuesService {
     });
     const saved = await this.commentRepo.save(comment);
 
-    // Notify customer if commenter is not the customer
     if (issue.customerId !== authorId) {
-      await this.notificationsService.notifyComment(
-        issue,
-        `${author.firstName} ${author.lastName}`,
-      );
+      await this.notificationsService.notifyComment(issue, `${author.firstName} ${author.lastName}`);
     }
 
     return saved;
