@@ -58,6 +58,16 @@ export class Issue {
   @Column({ nullable: true })
   assigneeName: string;
 
+  // SLA fields
+  @Column({ nullable: true, type: 'timestamp' })
+  slaDeadline: Date;
+
+  @Column({ default: false })
+  slaBreached: boolean;
+
+  @Column({ nullable: true, type: 'timestamp' })
+  slaNotifiedAt: Date;
+
   @OneToMany(() => IssueComment, (c) => c.issue, { cascade: true })
   comments: IssueComment[];
 
