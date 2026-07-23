@@ -14,6 +14,14 @@ export const issuesService = {
     return data;
   },
 
+  async getAssigned(status?: string, search?: string) {
+    const params = new URLSearchParams();
+    if (status) params.append('status', status);
+    if (search) params.append('search', search);
+    const { data } = await api.get(`/issues/assigned?${params.toString()}`);
+    return data;
+  },
+
   async getEmployees() {
     const { data } = await api.get('/issues/employees');
     return data;
