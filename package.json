@@ -4,7 +4,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "npx nx run-many --target=serve --projects=@org/frontend,@org/backend --parallel",
-    "seed": "cd apps/backend && npx ts-node -r tsconfig-paths/register src/database/seeds/super-admin.seed.ts"
+    "seed": "cd apps/backend && npm run seed"
   },
   "private": true,
   "dependencies": {
