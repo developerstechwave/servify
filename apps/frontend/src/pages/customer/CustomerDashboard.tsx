@@ -232,7 +232,7 @@ export default function CustomerDashboard() {
     <div className="flex flex-col gap-4">
       {/* Greeting */}
       <div>
-        <h1 className="text-2xl font-bold text-text-main">Hello {user?.firstName} 👋</h1>
+        <h1 className="text-2xl font-bold text-text-main">Hello {user?.firstName}</h1>
         <p className="text-text-muted text-sm">Here's an overview of your profile</p>
       </div>
 

@@ -2,9 +2,10 @@ import { useEffect, useState, useCallback } from 'react';
 import { Input, Dropdown, message, Spin } from 'antd';
 import type { MenuProps } from 'antd';
 import { useNavigate } from 'react-router-dom';
+import SLABadge from '../../components/ui/SLABadge';
 import { issuesService } from '../../services/issues.service';
 import { useAuthStore } from '../../store/auth.store';
-import SLABadge from '../../components/ui/SLABadge';
+
 import { LINKS } from '../../lib/links';
 
 interface Issue {
@@ -17,6 +18,8 @@ interface Issue {
   assigneeId:   string | null;
   assigneeName: string | null;
   commentCount:  number;
+  slaDeadline:   string | null;
+  slaBreached:   boolean;
   slaDeadline:   string | null;
   slaBreached:   boolean;
   createdAt:    string;
@@ -80,7 +83,12 @@ const IssueCard = ({
         >
           {issue.serviceName || 'General'}
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 flex-wrap">
+          <SLABadge
+            slaDeadline={issue.slaDeadline}
+            slaBreached={issue.slaBreached}
+            resolved={issue.status === 'resolved' || issue.status === 'failed'}
+          />
           {issue.assigneeId ? (
             <div
               className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
