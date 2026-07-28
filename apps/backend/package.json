@@ -119,6 +119,6 @@
         "tsconfig-paths": "^4.2.0"
     },
     "scripts": {
-        "seed": "ts-node -r tsconfig-paths/register src/database/seeds/super-admin.seed.ts"
+        "seed": "npx ts-node -r tsconfig-paths/register src/database/seeds/super-admin.seed.ts"
     }
 }
