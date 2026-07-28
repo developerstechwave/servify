@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule }                  from '../module/auth/auth.module';
 import { DashboardModule }             from '../module/dashboard/dashboard.module';
 import { JoinRequestsModule }          from '../module/join-requests/join-requests.module';
@@ -14,6 +15,7 @@ import { IssuesModule }                from '../module/issues/issues.module';
 import { PaymentsModule }              from '../module/payments/payments.module';
 import { CustomerSubscriptionsModule } from '../module/customer-subscriptions/customer-subscriptions.module';
 import { NotificationsModule }         from '../module/notifications/notifications.module';
+import { SchedulerModule }             from '../module/scheduler/scheduler.module';
 import { User }                 from '../module/auth/entities/user.entity';
 import { Invitation }           from '../module/auth/entities/invitation.entity';
 import { JoinRequest }          from '../module/join-requests/entities/join-request.entity';
@@ -29,6 +31,7 @@ import { Notification }         from '../module/notifications/entities/notificat
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
     TypeOrmModule.forRoot({
       type:        'postgres',
       host:        process.env.DB_HOST     || 'localhost',
@@ -57,6 +60,7 @@ import { Notification }         from '../module/notifications/entities/notificat
     PaymentsModule,
     CustomerSubscriptionsModule,
     NotificationsModule,
+    SchedulerModule,
   ],
 })
 export class AppModule {}

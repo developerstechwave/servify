@@ -69,7 +69,7 @@ export default function SuperAdminDashboard() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold text-text-main">Hello {user?.firstName} 👋</h1>
+        <h1 className="text-2xl font-bold text-text-main">Hello {user?.firstName}</h1>
         <p className="text-text-muted text-sm mt-1">Here's an overview of your platform</p>
       </div>
 

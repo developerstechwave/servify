@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Button, Modal, Spin, message, Input, Checkbox } from 'antd';
 import { issuesService } from '../../services/issues.service';
 import { LINKS } from '../../lib/links';
+import { useAuthStore } from '../../store/auth.store';
 
 interface Issue {
   id:           string;
@@ -44,6 +45,7 @@ export default function IssueDetailPage() {
 
   const [issue, setIssue]             = useState<Issue | null>(null);
   const [loading, setLoading]         = useState(true);
+  const { user } = useAuthStore();
   const [assignModal, setAssignModal] = useState(false);
   const [employees, setEmployees]     = useState<Employee[]>([]);
   const [selected, setSelected]       = useState<string[]>([]);
@@ -130,8 +132,8 @@ export default function IssueDetailPage() {
           type="primary"
           size="large"
           onClick={openAssignModal}
+          style={user?.role === 'employee' ? { display: 'none' } : { background: 'rgba(101,16,127,1)', border: 'none' }}
           className="rounded-xl font-semibold h-11 px-6"
-          style={{ background: 'rgba(101,16,127,1)', border: 'none' }}
         >
           Assign Ticket
         </Button>

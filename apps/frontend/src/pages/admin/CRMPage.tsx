@@ -2,7 +2,10 @@ import { useEffect, useState, useCallback } from 'react';
 import { Input, Dropdown, message, Spin } from 'antd';
 import type { MenuProps } from 'antd';
 import { useNavigate } from 'react-router-dom';
+import SLABadge from '../../components/ui/SLABadge';
 import { issuesService } from '../../services/issues.service';
+import { useAuthStore } from '../../store/auth.store';
+
 import { LINKS } from '../../lib/links';
 
 interface Issue {
@@ -14,7 +17,11 @@ interface Issue {
   serviceName:  string;
   assigneeId:   string | null;
   assigneeName: string | null;
-  commentCount: number;
+  commentCount:  number;
+  slaDeadline:   string | null;
+  slaBreached:   boolean;
+  slaDeadline:   string | null;
+  slaBreached:   boolean;
   createdAt:    string;
 }
 
@@ -76,7 +83,12 @@ const IssueCard = ({
         >
           {issue.serviceName || 'General'}
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 flex-wrap">
+          <SLABadge
+            slaDeadline={issue.slaDeadline}
+            slaBreached={issue.slaBreached}
+            resolved={issue.status === 'resolved' || issue.status === 'failed'}
+          />
           {issue.assigneeId ? (
             <div
               className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
@@ -129,13 +141,16 @@ const IssueCard = ({
 export default function CRMPage() {
   const navigate = useNavigate();
   const [issues, setIssues]   = useState<Issue[]>([]);
+  const { user } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [search, setSearch]   = useState('');
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await issuesService.getAll(undefined, search);
+      const res = user?.role === 'employee'
+        ? await issuesService.getAssigned(undefined, search)
+        : await issuesService.getAll(undefined, search);
       setIssues(res);
     } catch {
       message.error('Failed to load issues');
@@ -213,7 +228,7 @@ export default function CRMPage() {
                       key={issue.id}
                       issue={issue}
                       onMoveStatus={handleMoveStatus}
-                      onClick={() => navigate(`${LINKS.ADMIN_CRM}/${issue.id}`)}
+                      onClick={() => navigate(`${user?.role === 'employee' ? LINKS.EMPLOYEE_CRM : LINKS.ADMIN_CRM}/${issue.id}`)}
                     />
                   ))
                 )}

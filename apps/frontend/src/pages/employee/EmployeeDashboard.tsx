@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Spin, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/auth.store';
@@ -49,10 +49,22 @@ export default function EmployeeDashboard() {
   );
 
   const statCards = [
-    { key: 'total',      icon: '🎫', color: 'rgba(101,16,127,0.1)',  textColor: 'rgba(101,16,127,1)'  },
-    { key: 'pending',    icon: '⏳', color: 'rgba(234,179,8,0.1)',   textColor: 'rgba(161,98,7,1)'    },
-    { key: 'inProgress', icon: '🔄', color: 'rgba(59,130,246,0.1)',  textColor: 'rgba(29,78,216,1)'   },
-    { key: 'resolved',   icon: '✅', color: 'rgba(34,197,94,0.1)',   textColor: 'rgba(21,128,61,1)'   },
+    {
+      key: 'total', color: 'rgba(101,16,127,0.1)', textColor: 'rgba(101,16,127,1)',
+      icon: <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>,
+    },
+    {
+      key: 'pending', color: 'rgba(234,179,8,0.1)', textColor: 'rgba(161,98,7,1)',
+      icon: <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><circle cx="12" cy="12" r="10" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2" /></svg>,
+    },
+    {
+      key: 'inProgress', color: 'rgba(59,130,246,0.1)', textColor: 'rgba(29,78,216,1)',
+      icon: <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>,
+    },
+    {
+      key: 'resolved', color: 'rgba(34,197,94,0.1)', textColor: 'rgba(21,128,61,1)',
+      icon: <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+    },
   ];
 
   return (
@@ -60,7 +72,7 @@ export default function EmployeeDashboard() {
       {/* Greeting */}
       <div>
         <h1 className="text-2xl font-bold text-text-main">
-          Hello {user?.firstName} 👋
+          Hello {user?.firstName}
         </h1>
         <p className="text-text-muted text-sm mt-1">Here's an overview of your assigned tickets</p>
       </div>
@@ -72,10 +84,10 @@ export default function EmployeeDashboard() {
           return (
             <div key={key} className="bg-white rounded-2xl p-5 border border-border shadow-sm">
               <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-xl mb-3"
+                className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
                 style={{ background: color }}
               >
-                {icon}
+                <span style={{ color: textColor }}>{icon as React.ReactNode}</span>
               </div>
               <p className="text-3xl font-bold" style={{ color: textColor }}>
                 {stat?.value ?? 0}
