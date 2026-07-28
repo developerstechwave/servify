@@ -1,9 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Table, Input, Button, Dropdown, message } from 'antd';
 import type { MenuProps } from 'antd';
+import SLABadge from '../../components/ui/SLABadge';
 import { useNavigate } from 'react-router-dom';
 import { issuesService } from '../../services/issues.service';
 import { LINKS } from '../../lib/links';
+import { useAuthStore } from '../../store/auth.store';
 
 interface Issue {
   id:           string;
@@ -14,7 +16,9 @@ interface Issue {
   serviceName:  string;
   assigneeId:   string | null;
   assigneeName: string | null;
-  commentCount: number;
+  commentCount:  number;
+  slaDeadline:   string | null;
+  slaBreached:   boolean;
   createdAt:    string;
 }
 
@@ -36,6 +40,7 @@ const StatusTag = ({ status }: { status: string }) => {
 
 export default function IssuesPage() {
   const navigate  = useNavigate();
+  const { user }  = useAuthStore();
   const [data, setData]       = useState<Issue[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch]   = useState('');
@@ -142,7 +147,7 @@ export default function IssuesPage() {
             loading={loading}
             pagination={{ pageSize: 9, showSizeChanger: false, style: { padding: '16px 24px' } }}
             onRow={(record) => ({
-              onClick:   () => navigate(`${LINKS.ADMIN_CRM}/${record.id}`),
+              onClick:   () => navigate(`${user?.role === 'employee' ? LINKS.EMPLOYEE_CRM : LINKS.ADMIN_CRM}/${record.id}`),
               className: 'cursor-pointer hover:bg-gray-50 transition-colors',
             })}
             style={{ border: 'none' }}

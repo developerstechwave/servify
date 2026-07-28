@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { User, UserRole } from '../auth/entities/user.entity';
 import { Issue, IssueStatus } from '../issues/entities/issue.entity';
 import { Payment, PaymentStatus } from '../payments/entities/payment.entity';
+import { CustomerSubscription } from '../customer-subscriptions/entities/customer-subscription.entity';
 
 @Injectable()
 export class DashboardService {
@@ -14,6 +15,8 @@ export class DashboardService {
     private issueRepo: Repository<Issue>,
     @InjectRepository(Payment)
     private paymentRepo: Repository<Payment>,
+    @InjectRepository(CustomerSubscription)
+    private subRepo: Repository<CustomerSubscription>,
   ) {}
 
   async getSuperAdminStats() {
@@ -22,14 +25,21 @@ export class DashboardService {
       this.userRepo.count({ where: { role: UserRole.CUSTOMER } }),
       this.userRepo.count({ where: { role: UserRole.EMPLOYEE } }),
     ]);
+
+    const allPayments = await this.paymentRepo.find();
+    const revenueAnalytics = this.buildMonthlyRevenue(allPayments);
+
+    const allCustomers = await this.userRepo.find({ where: { role: UserRole.CUSTOMER } });
+    const customerActivity = this.buildMonthlyCustomers(allCustomers);
+
     return {
       stats: {
-        totalOrganisations: { value: totalOrganisations, change: +12.34 },
-        totalCustomers:     { value: totalCustomers,     change: -12.34 },
-        totalEmployees:     { value: totalEmployees,     change: -12.34 },
+        totalOrganisations: { value: totalOrganisations, change: await this.calcChange(UserRole.ADMIN) },
+        totalCustomers:     { value: totalCustomers,     change: await this.calcChange(UserRole.CUSTOMER) },
+        totalEmployees:     { value: totalEmployees,     change: await this.calcChange(UserRole.EMPLOYEE) },
       },
-      revenueAnalytics: this.generateMonthlyData(),
-      customerActivity: this.generateMonthlyBarData(),
+      revenueAnalytics,
+      customerActivity,
     };
   }
 
@@ -41,18 +51,22 @@ export class DashboardService {
       this.issueRepo.count({ where: { organisationId, status: IssueStatus.PENDING } }),
     ]);
 
-    // Real revenue data from payments
     const payments = await this.paymentRepo.find({ where: { organisationId } });
     const revenueAnalytics = this.buildRevenueAnalytics(payments);
-    const topLocations     = this.generateTopLocations();
-    const customerActivity = this.generateMonthlyBarData();
+
+    const customers = await this.userRepo.find({
+      where: { organisationId, role: UserRole.CUSTOMER },
+    });
+    const customerActivity = this.buildMonthlyCustomers(customers);
+
+    const topLocations = await this.buildTopLocations(organisationId);
 
     return {
       stats: {
-        verifiedCustomers: { value: verifiedCustomers, change: +12.34 },
-        newCustomers:      { value: newCustomers,      change: -12.34 },
-        openTickets:       { value: openTickets,       change: +12.34 },
-        subAdmins:         { value: subAdmins,         change: +12.34 },
+        verifiedCustomers: { value: verifiedCustomers, change: 0 },
+        newCustomers:      { value: newCustomers,      change: 0 },
+        openTickets:       { value: openTickets,       change: 0 },
+        subAdmins:         { value: subAdmins,         change: 0 },
       },
       revenueAnalytics,
       customerActivity,
@@ -92,41 +106,87 @@ export class DashboardService {
     };
   }
 
+
   private buildRevenueAnalytics(payments: Payment[]) {
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     return months.map((month, idx) => {
-      const monthPayments = payments.filter((p) => {
-        const d = new Date(p.createdAt);
-        return d.getMonth() === idx;
-      });
+      const mp = payments.filter((p) => new Date(p.createdAt).getMonth() === idx);
       return {
         month,
-        success: monthPayments.filter((p) => p.status === PaymentStatus.PAID)
-          .reduce((sum, p) => sum + Number(p.amount), 0),
-        pending: monthPayments.filter((p) => p.status === PaymentStatus.PENDING)
-          .reduce((sum, p) => sum + Number(p.amount), 0),
-        failed: monthPayments.filter((p) => p.status === PaymentStatus.FAILED)
-          .reduce((sum, p) => sum + Number(p.amount), 0),
+        success: mp.filter((p) => p.status === PaymentStatus.PAID).reduce((s, p) => s + Number(p.amount), 0),
+        pending: mp.filter((p) => p.status === PaymentStatus.PENDING).reduce((s, p) => s + Number(p.amount), 0),
+        failed:  mp.filter((p) => p.status === PaymentStatus.FAILED).reduce((s, p) => s + Number(p.amount), 0),
       };
     });
   }
 
-  private generateMonthlyData() {
+  private buildMonthlyRevenue(payments: Payment[]) {
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    return months.map((month) => ({ month, value: Math.floor(Math.random() * 9000) + 1000 }));
+    return months.map((month, idx) => ({
+      month,
+      value: payments
+        .filter((p) => new Date(p.createdAt).getMonth() === idx)
+        .reduce((s, p) => s + Number(p.amount), 0),
+    }));
   }
 
-  private generateMonthlyBarData() {
+  private buildMonthlyCustomers(customers: User[]) {
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    return months.map((month) => ({ month, value: Math.floor(Math.random() * 70000) + 5000 }));
+    return months.map((month, idx) => ({
+      month,
+      value: customers.filter((c) => new Date(c.createdAt).getMonth() === idx).length,
+    }));
   }
 
-  private generateTopLocations() {
-    return [
-      { country: 'Ghana',        value: 38.6, color: 'rgba(101,16,127,1)'    },
-      { country: 'Nigeria',      value: 22.5, color: 'rgba(101,16,127,0.6)'  },
-      { country: 'Italy',        value: 30.8, color: 'rgba(101,16,127,0.35)' },
-      { country: 'South Africa', value: 8.1,  color: 'rgba(101,16,127,0.15)' },
+  private async buildTopLocations(organisationId: string) {
+    const customers = await this.userRepo.find({
+      where: { organisationId, role: UserRole.CUSTOMER },
+    });
+
+    const total = customers.length;
+    if (total === 0) {
+      return [
+        { country: 'No Data', value: 100, color: 'rgba(101,16,127,0.2)' },
+      ];
+    }
+
+    const countryCounts: Record<string, number> = {};
+    customers.forEach((c) => {
+      const country = c.country || 'Unknown';
+      countryCounts[country] = (countryCounts[country] || 0) + 1;
+    });
+
+    const colors = [
+      'rgba(101,16,127,1)',
+      'rgba(101,16,127,0.6)',
+      'rgba(101,16,127,0.35)',
+      'rgba(101,16,127,0.15)',
     ];
+
+    return Object.entries(countryCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 4)
+      .map(([country, count], i) => ({
+        country,
+        value: Math.round((count / total) * 100 * 10) / 10,
+        color: colors[i] ?? colors[3],
+      }));
+  }
+
+  private async calcChange(role: UserRole): Promise<number> {
+    const now       = new Date();
+    const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+    const [thisCount, lastCount] = await Promise.all([
+      this.userRepo.count({ where: { role } }),
+      this.userRepo.createQueryBuilder('u')
+        .where('u.role = :role', { role })
+        .andWhere('u.createdAt < :thisMonth', { thisMonth })
+        .getCount(),
+    ]);
+
+    if (lastCount === 0) return 0;
+    return Math.round(((thisCount - lastCount) / lastCount) * 100 * 100) / 100;
   }
 }
