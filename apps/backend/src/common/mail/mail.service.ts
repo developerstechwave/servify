@@ -7,13 +7,23 @@ export class MailService {
 
   constructor(private mailerService: MailerService) {}
 
+  private assertRecipient(to: string, context: string) {
+    if (!to || !to.trim()) {
+      const message = `Cannot send "${context}" email: no recipient address provided`;
+      this.logger.error(message);
+      throw new Error(message);
+    }
+  }
+
   async sendInvitation(payload: {
-    to:        string;
-    name:      string;
-    token:     string;
-    message:   string;
+    to: string;
+    name: string;
+    token: string;
+    message: string;
     expiresIn: string;
   }) {
+    this.assertRecipient(payload.to, 'invitation');
+
     const registerUrl = `${process.env.CLIENT_URL}/auth/register?token=${payload.token}`;
     const html = `
       <div style="font-family:Arial,sans-serif;max-width:600px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
@@ -39,18 +49,23 @@ export class MailService {
     `;
     try {
       await this.mailerService.sendMail({
-        to:      payload.to,
+        to: payload.to,
         subject: 'You have been invited to Servify',
         html,
       });
       this.logger.log(`Invitation email sent to ${payload.to}`);
     } catch (error) {
-      this.logger.error(`Failed to send invitation email to ${payload.to}`, error);
+      this.logger.error(
+        `Failed to send invitation email to ${payload.to}`,
+        error,
+      );
       throw error;
     }
   }
 
   async sendRequestReceived(payload: { to: string; name: string }) {
+    this.assertRecipient(payload.to, 'request received');
+
     const html = `
       <div style="font-family:Arial,sans-serif;max-width:600px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
         <div style="background:rgba(101,16,127,1);padding:32px;text-align:center;">
@@ -72,7 +87,7 @@ export class MailService {
     `;
     try {
       await this.mailerService.sendMail({
-        to:      payload.to,
+        to: payload.to,
         subject: 'We received your request — Servify',
         html,
       });
@@ -84,11 +99,13 @@ export class MailService {
   }
 
   async sendWelcomeEmployee(payload: {
-    to:       string;
-    name:     string;
+    to: string;
+    name: string;
     password: string;
-    role:     string;
+    role: string;
   }) {
+    this.assertRecipient(payload.to, 'welcome employee');
+
     const html = `
       <div style="font-family:Arial,sans-serif;max-width:600px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
         <div style="background:rgba(101,16,127,1);padding:32px;text-align:center;">
@@ -110,7 +127,7 @@ export class MailService {
     `;
     try {
       await this.mailerService.sendMail({
-        to:      payload.to,
+        to: payload.to,
         subject: 'Welcome to Servify — Your Login Credentials',
         html,
       });
@@ -121,3 +138,4 @@ export class MailService {
     }
   }
 }
+1

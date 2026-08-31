@@ -3,20 +3,23 @@ import * as ReactDOM from 'react-dom/client';
 import { ConfigProvider } from 'antd';
 import App from './app/app';
 import './styles.css';
+import AuthInitializer from './components/AuthInitializer';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <StrictMode>
     <ConfigProvider
       theme={{
         token: {
-          colorPrimary:    'rgba(101, 16, 127, 1)',
+          colorPrimary: 'rgba(101, 16, 127, 1)',
           colorBgContainer: 'rgba(255, 255, 255, 1)',
-          borderRadius:    8,
-          fontFamily:      'Inter, sans-serif',
+          borderRadius: 8,
+          fontFamily: 'Inter, sans-serif',
         },
       }}
     >
-      <App />
+      <AuthInitializer>
+        <App />
+      </AuthInitializer>
     </ConfigProvider>
   </StrictMode>,
 );

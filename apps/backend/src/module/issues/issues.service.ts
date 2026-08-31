@@ -49,7 +49,11 @@ export class IssuesService {
     return counts[0].emp;
   }
 
-  async createIssue(customerId: string, organisationId: string, dto: CreateIssueDto) {
+  async createIssue(
+    customerId: string,
+    organisationId: string,
+    dto: CreateIssueDto,
+  ) {
     const customer = await this.userRepo.findOne({ where: { id: customerId } });
     if (!customer) throw new NotFoundException('Customer not found');
 
@@ -65,11 +69,13 @@ export class IssuesService {
       customerId,
       organisationId,
       customerName: `${customer.firstName} ${customer.lastName}`,
-      status:       assignee ? IssueStatus.IN_PROGRESS : IssueStatus.PENDING,
+      status: assignee ? IssueStatus.IN_PROGRESS : IssueStatus.PENDING,
       slaDeadline,
-      slaBreached:  false,
-      assigneeId:   assignee?.id ?? null,
-      assigneeName: assignee ? `${assignee.firstName} ${assignee.lastName}` : null,
+      slaBreached: false,
+      assigneeId: assignee?.id ?? null,
+      assigneeName: assignee
+        ? `${assignee.firstName} ${assignee.lastName}`
+        : null,
     });
 
     const saved = await this.issueRepo.save(issue);
@@ -80,30 +86,30 @@ export class IssuesService {
     });
     for (const admin of admins) {
       await this.notificationsService.create({
-        userId:         admin.id,
+        userId: admin.id,
         organisationId,
-        type:           NotificationType.ISSUE,
-        title:          'New Issue Created',
-        message:        `${customer.firstName} ${customer.lastName} created an issue`,
-        issueId:        saved.id,
-        issueTopic:     saved.topic,
-        issueStatus:    saved.status,
-        actorName:      `${customer.firstName} ${customer.lastName}`,
+        type: NotificationType.ISSUE,
+        title: 'New Issue Created',
+        message: `${customer.firstName} ${customer.lastName} created an issue`,
+        issueId: saved.id,
+        issueTopic: saved.topic,
+        issueStatus: saved.status,
+        actorName: `${customer.firstName} ${customer.lastName}`,
       });
     }
 
     // Notify auto-assigned employee
     if (assignee) {
       await this.notificationsService.create({
-        userId:         assignee.id,
+        userId: assignee.id,
         organisationId,
-        type:           NotificationType.DIRECT,
-        title:          'Ticket Auto-Assigned to You',
-        message:        `A new ticket from ${customer.firstName} ${customer.lastName} has been automatically assigned to you`,
-        issueId:        saved.id,
-        issueTopic:     saved.topic,
-        issueStatus:    saved.status,
-        actorName:      'System',
+        type: NotificationType.DIRECT,
+        title: 'Ticket Auto-Assigned to You',
+        message: `A new ticket from ${customer.firstName} ${customer.lastName} has been automatically assigned to you`,
+        issueId: saved.id,
+        issueTopic: saved.topic,
+        issueStatus: saved.status,
+        actorName: 'System',
       });
     }
 
@@ -112,62 +118,69 @@ export class IssuesService {
 
   async getAll(organisationId: string, status?: IssueStatus, search?: string) {
     let issues = await this.issueRepo.find({
-      where:     { organisationId },
+      where: { organisationId },
       relations: { comments: true },
-      order:     { createdAt: 'DESC' },
+      order: { createdAt: 'DESC' },
     });
     if (status) issues = issues.filter((i) => i.status === status);
     if (search) {
       const q = search.toLowerCase();
       issues = issues.filter(
-        (i) => i.topic.toLowerCase().includes(q) ||
-               i.customerName?.toLowerCase().includes(q) ||
-               i.description.toLowerCase().includes(q),
+        (i) =>
+          i.topic.toLowerCase().includes(q) ||
+          i.customerName?.toLowerCase().includes(q) ||
+          i.description.toLowerCase().includes(q),
       );
     }
     return issues.map((i) => ({
-      id:           i.id,
-      topic:        i.topic,
-      description:  i.description,
-      status:       i.status,
+      id: i.id,
+      topic: i.topic,
+      description: i.description,
+      status: i.status,
       customerName: i.customerName,
-      serviceName:  i.serviceName,
-      assigneeId:   i.assigneeId,
+      serviceName: i.serviceName,
+      assigneeId: i.assigneeId,
       assigneeName: i.assigneeName,
-      slaDeadline:  i.slaDeadline,
-      slaBreached:  i.slaBreached,
+      slaDeadline: i.slaDeadline,
+      slaBreached: i.slaBreached,
       commentCount: i.comments?.length ?? 0,
-      createdAt:    i.createdAt,
+      createdAt: i.createdAt,
     }));
   }
 
-  async getAssignedIssues(employeeId: string, organisationId: string, status?: IssueStatus, search?: string) {
+  async getAssignedIssues(
+    employeeId: string,
+    organisationId: string,
+    status?: IssueStatus,
+    search?: string,
+  ) {
     let issues = await this.issueRepo.find({
-      where:     { organisationId, assigneeId: employeeId },
+      where: { organisationId, assigneeId: employeeId },
       relations: { comments: true },
-      order:     { createdAt: 'DESC' },
+      order: { createdAt: 'DESC' },
     });
     if (status) issues = issues.filter((i) => i.status === status);
     if (search) {
       const q = search.toLowerCase();
       issues = issues.filter(
-        (i) => i.topic.toLowerCase().includes(q) ||
-               i.customerName?.toLowerCase().includes(q),
+        (i) =>
+          i.topic.toLowerCase().includes(q) ||
+          i.customerName?.toLowerCase().includes(q),
       );
     }
     return issues.map((i) => ({
-      id:           i.id,
-      topic:        i.topic,
-      description:  i.description,
-      status:       i.status,
+      id: i.id,
+      topic: i.topic,
+      description: i.description,
+      status: i.status,
       customerName: i.customerName,
-      serviceName:  i.serviceName,
-      assigneeId:   i.assigneeId,
+      serviceName: i.serviceName,
+      assigneeId: i.assigneeId,
       assigneeName: i.assigneeName,
-      slaDeadline:  i.slaDeadline,
-      slaBreached:  i.slaBreached,
+      slaDeadline: i.slaDeadline,
+      slaBreached: i.slaBreached,
       commentCount: i.comments?.length ?? 0,
-      createdAt:    i.createdAt,
+      createdAt: i.createdAt,
     }));
   }
 
@@ -180,21 +193,31 @@ export class IssuesService {
 
   async getOne(id: string, organisationId: string) {
     const issue = await this.issueRepo.findOne({
-      where:     { id, organisationId },
+      where: { id, organisationId },
       relations: { comments: true },
     });
     if (!issue) throw new NotFoundException('Issue not found');
     return issue;
   }
 
-  async updateIssue(id: string, organisationId: string, dto: UpdateIssueDto, actorName?: string) {
-    const issue = await this.issueRepo.findOne({ where: { id, organisationId } });
+  async updateIssue(
+    id: string,
+    organisationId: string,
+    dto: UpdateIssueDto,
+    actorName?: string,
+  ) {
+    const issue = await this.issueRepo.findOne({
+      where: { id, organisationId },
+    });
     if (!issue) throw new NotFoundException('Issue not found');
     const oldStatus = issue.status;
     Object.assign(issue, dto);
 
     // If resolved, clear SLA breach flag
-    if (dto.status === IssueStatus.RESOLVED || dto.status === IssueStatus.FAILED) {
+    if (
+      dto.status === IssueStatus.RESOLVED ||
+      dto.status === IssueStatus.FAILED
+    ) {
       issue.slaBreached = false;
     }
 
@@ -207,8 +230,15 @@ export class IssuesService {
     return saved;
   }
 
-  async assignTicket(id: string, organisationId: string, employeeId: string, actorName?: string) {
-    const issue = await this.issueRepo.findOne({ where: { id, organisationId } });
+  async assignTicket(
+    id: string,
+    organisationId: string,
+    employeeId: string,
+    actorName?: string,
+  ) {
+    const issue = await this.issueRepo.findOne({
+      where: { id, organisationId },
+    });
     if (!issue) throw new NotFoundException('Issue not found');
 
     const employee = await this.userRepo.findOne({
@@ -216,12 +246,16 @@ export class IssuesService {
     });
     if (!employee) throw new NotFoundException('Employee not found');
 
-    issue.assigneeId   = employee.id;
+    issue.assigneeId = employee.id;
     issue.assigneeName = `${employee.firstName} ${employee.lastName}`;
-    issue.status       = IssueStatus.IN_PROGRESS;
+    issue.status = IssueStatus.IN_PROGRESS;
     const saved = await this.issueRepo.save(issue);
 
-    await this.notificationsService.notifyIssueAssigned(saved, employee.id, actorName || 'Admin');
+    await this.notificationsService.notifyIssueAssigned(
+      saved,
+      employee.id,
+      actorName || 'Admin',
+    );
     return saved;
   }
 
@@ -241,7 +275,10 @@ export class IssuesService {
     const saved = await this.commentRepo.save(comment);
 
     if (issue.customerId !== authorId) {
-      await this.notificationsService.notifyComment(issue, `${author.firstName} ${author.lastName}`);
+      await this.notificationsService.notifyComment(
+        issue,
+        `${author.firstName} ${author.lastName}`,
+      );
     }
 
     return saved;
@@ -252,10 +289,34 @@ export class IssuesService {
       where: { organisationId, role: UserRole.EMPLOYEE, isActive: true },
     });
     return employees.map((e) => ({
-      id:     e.id,
-      name:   `${e.firstName} ${e.lastName}`,
-      role:   e.employeeRole || 'Employee',
+      id: e.id,
+      name: `${e.firstName} ${e.lastName}`,
+      role: e.employeeRole || 'Employee',
       avatar: e.avatar,
     }));
+  }
+
+  async deleteIssue(
+    issueId: string,
+    customerId: string,
+    organisationId: string,
+  ) {
+    const issue = await this.issueRepo.findOne({
+      where: {
+        id: issueId,
+        customerId,
+        organisationId,
+      },
+    });
+
+    if (!issue) {
+      throw new NotFoundException('Issue not found');
+    }
+
+    await this.issueRepo.remove(issue);
+
+    return {
+      message: 'Issue deleted successfully',
+    };
   }
 }

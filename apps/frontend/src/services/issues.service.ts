@@ -54,4 +54,9 @@ export const issuesService = {
     const { data } = await api.post(`/issues/${id}/comments`, { body });
     return data;
   },
+
+  async delete(id: string) {
+    const { data } = await api.delete(`/issues/${id}`);
+    return data;
+  }
 };

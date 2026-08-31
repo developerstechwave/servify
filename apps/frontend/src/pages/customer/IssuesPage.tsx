@@ -114,9 +114,23 @@ export default function CustomerIssuesPage() {
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    message.info('Delete functionality coming soon');
-    setDeleteTarget(null);
+
+    try {
+      setSaving(true);
+
+      await issuesService.delete(deleteTarget.id);
+
+      message.success('Issue deleted successfully');
+      setDeleteTarget(null);
+
+      await fetchData();
+    } catch (err: any) {
+      message.error(err?.response?.data?.message || 'Failed to delete issue');
+    } finally {
+      setSaving(false);
+    }
   };
+
 
   const openReport = () => {
     loadProducts();

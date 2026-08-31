@@ -1,6 +1,14 @@
 import {
-  Controller, Get, Post, Patch,
-  Body, Param, Query, Req, UseGuards,
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Body,
+  Param,
+  Query,
+  Req,
+  UseGuards,
+  Delete,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { IssuesService } from './issues.service';
@@ -62,6 +70,15 @@ export class IssuesController {
   @Get(':id')
   getOne(@Req() req: any, @Param('id') id: string) {
     return this.service.getOne(id, req.user.organisationId);
+  }
+
+  @Delete(':id')
+  async delete(@Req() req: any, @Param('id') id: string) {
+    return this.service.deleteIssue(
+      id,
+      req.user.id,
+      req.user.organisationId,
+    )
   }
 
   @Patch(':id')
