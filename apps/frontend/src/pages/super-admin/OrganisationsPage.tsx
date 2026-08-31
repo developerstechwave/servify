@@ -62,7 +62,8 @@ export default function OrganisationsPage() {
   const handleInvite = async (values: any) => {
     try {
       setSaving(true);
-      await organisationsService.invite(values.email, values.name);
+      // NOTE: invite(name, email) — order matches organisationsService.invite's signature.
+      await organisationsService.invite(values.name, values.email);
       message.success('Invitation sent');
       setAddModal(false);
       form.resetFields();
@@ -235,10 +236,10 @@ export default function OrganisationsPage() {
           </Form.Item>
           <div className="flex gap-3 mt-2">
             <Button size="large" onClick={() => { setAddModal(false); form.resetFields(); }}
-              className="flex-1 h-11 rounded-xl">Cancel</Button>
+                    className="flex-1 h-11 rounded-xl">Cancel</Button>
             <Button type="primary" htmlType="submit" size="large" loading={saving}
-              className="flex-1 h-11 rounded-xl font-semibold"
-              style={{ background: 'rgba(101,16,127,1)', border: 'none' }}>
+                    className="flex-1 h-11 rounded-xl font-semibold"
+                    style={{ background: 'rgba(101,16,127,1)', border: 'none' }}>
               Send Invitation
             </Button>
           </div>
@@ -258,9 +259,9 @@ export default function OrganisationsPage() {
           </p>
           <div className="flex gap-3">
             <Button size="large" onClick={() => setDeleteTarget(null)}
-              className="flex-1 h-11 rounded-xl">Cancel</Button>
+                    className="flex-1 h-11 rounded-xl">Cancel</Button>
             <Button danger type="primary" size="large" loading={saving} onClick={handleDelete}
-              className="flex-1 h-11 rounded-xl">Delete</Button>
+                    className="flex-1 h-11 rounded-xl">Delete</Button>
           </div>
         </div>
       </Modal>

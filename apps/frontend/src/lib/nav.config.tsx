@@ -126,12 +126,12 @@ export const EMPLOYEE_NAV: NavItem[] = [
     icon:  icon('M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2 M12 3a4 4 0 100 8 4 4 0 000-8z'),
     path:  LINKS.EMPLOYEE_CUSTOMERS,
   },
-  {
-    key:   'notifications',
-    label: 'Notifications',
-    icon:  icon('M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9'),
-    path:  LINKS.EMPLOYEE_NOTIFICATIONS,
-  },
+  // {
+  //   key:   'notifications',
+  //   label: 'Notifications',
+  //   icon:  icon('M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9'),
+  //   path:  LINKS.EMPLOYEE_NOTIFICATIONS,
+  // },
 ];
 
 export const CUSTOMER_NAV: NavItem[] = [

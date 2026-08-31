@@ -10,14 +10,15 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+
 import { AuthGuard } from '@nestjs/passport';
+
 import { Request, Response } from 'express';
+
 import { AuthService } from './auth.service';
+
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
-import { RolesGuard } from '../../common/guards/roles.guard';
-import { Roles } from '../../common/decorators/roles.decorator';
-import { UserRole } from './entities/user.entity';
 
 @Controller('auth')
 export class AuthController {
@@ -27,7 +28,8 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   login(
     @Body() dto: LoginDto,
-    @Res({ passthrough: true }) res: Response,
+    @Res({ passthrough: true })
+    res: Response,
   ) {
     return this.authService.login(dto, res);
   }
@@ -35,7 +37,8 @@ export class AuthController {
   @Post('register')
   register(
     @Body() dto: RegisterDto,
-    @Res({ passthrough: true }) res: Response,
+    @Res({ passthrough: true })
+    res: Response,
   ) {
     return this.authService.register(dto, res);
   }
@@ -49,14 +52,18 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   refresh(
     @Req() req: Request,
-    @Res({ passthrough: true }) res: Response,
+    @Res({ passthrough: true })
+    res: Response,
   ) {
     return this.authService.refresh(req, res);
   }
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  logout(@Res({ passthrough: true }) res: Response) {
+  logout(
+    @Res({ passthrough: true })
+    res: Response,
+  ) {
     return this.authService.logout(res);
   }
 

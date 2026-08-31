@@ -9,18 +9,26 @@ export const organisationsService = {
     return data;
   },
 
-  async invite(companyName: string, email: string, phone?: string) {
-    const { data } = await api.post('/organisations/invite', { companyName, email, phone });
+  async invite(name: string, email: string, phone?: string) {
+    const { data } = await api.post('/organisations/invite', {
+      name,
+      email,
+      phone,
+    });
     return data;
   },
 
   async activate(organisationId: string) {
-    const { data } = await api.patch(`/organisations/${organisationId}/activate`);
+    const { data } = await api.patch(
+      `/organisations/${organisationId}/activate`,
+    );
     return data;
   },
 
   async deactivate(organisationId: string) {
-    const { data } = await api.patch(`/organisations/${organisationId}/deactivate`);
+    const { data } = await api.patch(
+      `/organisations/${organisationId}/deactivate`,
+    );
     return data;
   },
 
